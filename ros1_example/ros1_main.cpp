@@ -1,5 +1,4 @@
 #include <cstdio>
-#include <cstdlib>
 #include <sys/timeb.h>
 #include <ctime>
 #include <queue>
@@ -9,24 +8,24 @@
 #include "adv_to_server/transmission/RosModule.h"
 #include "adv_to_server/transmission/TCPClient.h"
 #include "adv_to_server/transmission/TcpServer.h"
-#include "adv_to_server/transmission/MqttClient.h"
 
-#include <geometry_msgs/msg/pose_with_covariance_stamped.h>
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
+#include <tf/tf.h>
+#include <tf/transform_broadcaster.h>
+#include <tf/transform_datatypes.h>
+#include <tf/transform_listener.h>
+#include "std_msgs/String.h"
+#include "adv_to_server/transmission/MqttClient.h"
 #include <chrono>
-#include "tf2/utils.h"
-#include "tf2_ros/transform_broadcaster.h"
-#include "tf2_ros/transform_listener.h"
-#include "tf2_geometry_msgs/tf2_geometry_msgs.h"
-#include "std_msgs/msg/string.h"
 
 bool g_flag_show_udp_send = true;
 bool g_event_queue_switch = true;
 
 // VK APIs backend
-const std::string TCP_VK_SRV_ADRR = "60.250.196.127";
+const std::string TCP_VK_SRV_ADRR = "service.itriadv.co";
 const int TCP_VK_SRV_PORT = 55553;
 
-const std::string UDP_VK_SRV_ADRR = "60.250.196.127";
+const std::string UDP_VK_SRV_ADRR = "service.itriadv.co";
 const int UDP_VK_SRV_PORT = 55554;
 const int UDP_VK_SRV_A_PLUS_SENSOR_PORT = 55560;
 const int UDP_VK_SRV_A_PLUS_INFO_PORT = 55561;
@@ -44,7 +43,7 @@ const int UDP_OBU_PORT = 9999;
 const std::string TCP_ADV_SRV_ADRR = "192.168.1.3";
 const int TCP_ADV_SRV_PORT = 8765;
 
-const std::string UDP_ADV_SRV_ADRR = "192.168.1.3";
+const std::string UDP_ADV_SRV_ADRR = "192.168.1.5";
 const int UDP_ADV_SRV_PORT = 8766;
 
 // obu traffic signal
@@ -120,16 +119,17 @@ std::queue<json> g_event_queue_2;
 
 TcpServer g_tcp_server;
 
-msgs::msg::DetectedObjectArray g_det_obj_array;
-msgs::msg::DetectedObjectArray g_tracking_obj_array;
-msgs::msg::LidLLA g_gps;
-msgs::msg::VehInfo g_veh_info;
+msgs::DetectedObjectArray g_det_obj_array;
+msgs::DetectedObjectArray g_tracking_obj_array;
+msgs::LidLLA g_gps;
+msgs::VehInfo g_veh_info;
+geometry_msgs::PoseStamped msg_pose;
 json g_fps_json = { { "key", 0 } };
 std::string g_vk102_response;
 std::string g_mile_json;
 std::string g_event_json;
 std::string g_status_json;
-msgs::msg::RouteInfo g_route_info;
+msgs::RouteInfo g_route_info;
 std::string g_board_list="00000000";
 int g_route_id = 2000;
 
@@ -157,22 +157,11 @@ const static std::string keys[] = {
   "FPS_camF_top",         "FPS_camR_front",       "FPS_camR_rear",         "FPS_camL_front",      "FPS_camL_rear",
   "FPS_camB_top",         "FPS_CamObjFrontRight", "FPS_CamObjFrontCenter", "FPS_CamObjFrontLeft", "FPS_CamObjFrontTop",
   "FPS_CamObjRightFront", "FPS_CamObjRightBack",  "FPS_CamObjLeftFront",   "FPS_CamObjLeftBack",  "FPS_CamObjBackTop",
-  "FPS_current_pose",     "FPS_veh_info",         "FPS_dynamic_path_para", "FPS_FlagInfo01",     "FPS_FlagInfo02",
-  "FPS_FlagInfo03",      "FPS_V2X_msg",          "FPS_camfront_bottom_60","FPS_camtop_close_120","FPS_camfront_top_far_30",
+  "FPS_current_pose",     "FPS_veh_info",         "FPS_dynamic_path_para", "FPS_Flag_Info01",     "FPS_Flag_Info02",
+  "FPS_Flag_Info03",      "FPS_V2X_msg",          "FPS_camfront_bottom_60","FPS_camtop_close_120","FPS_camfront_top_far_30",
   "FPS_camleft_back_60",  "FPS_camleft_front_60", "FPS_camright_back_60",  "FPS_camright_front_60","FPS_camback_top_120",
   "FPS_cam_objfront_bottom_60","FPS_cam_objront_top_close_120","FPS_cam_objfront_top_far_30", "FPS_cam_objleft_back_60",
   "FPS_cam_objleft_front_60",  "FPS_cam_objright_back_60",     "FPS_cam_objright_front_60",   "FPS_cam_objback_top_120"
-};
-
-
-struct Pose
-{
-  double x;
-  double y;
-  double z;
-  double roll;
-  double pitch;
-  double yaw;
 };
 
 struct ArriveStop
@@ -217,7 +206,7 @@ struct VehicelStatus
   float radar; //radar
   float lidar;
   float camera;
-  float gps;
+  float GPS;
   int headlight; //大燈 0關1開
   int wiper; //雨刷 0關 1開
   int indoor_light; //車內燈 0關 1開
@@ -225,7 +214,7 @@ struct VehicelStatus
   int left_turn_light; //左方向燈 0關 1開
   int right_turn_light;//右方向燈 0關 1開
   int estop; //E-Stop 0關 1開
-  int acc_state; //ACC電源狀態 0關 1開
+  int ACC_state; //ACC電源狀態 0關 1開
   float time; //標準時間
   float driving_time; //行駛時間
   float mileage; //行駛距離
@@ -252,6 +241,9 @@ float g_mode; //模式 自動/半自動/手動/鎖定
 float g_emergency_exit; //緊急出口
   
 Pose g_current_gnss_pose;
+Pose current_pose;
+float speed_cmd = 0.;
+float lidarlla_heading = 0.;
 ArriveStop g_cuttent_arrive_stop;
 IMU g_imu;
 
@@ -310,50 +302,51 @@ bool convertBoolean(int state)
 /*========================= ROS callbacks begin=========================*/
 
 
-void callback_flag_info02(const msgs::msg::FlagInfo::SharedPtr input)
+void callback_flag_info02(const msgs::Flag_Info::ConstPtr& input)
 {
-    g_mode = input->dspace_flag08;
+    g_mode = input->Dspace_Flag08;
     std::cout << "adv mode: " << g_mode << std::endl;
 }
 
-void callback_flag_info04(const msgs::msg::FlagInfo::SharedPtr input)
+void callback_flag_info04(const msgs::Flag_Info::ConstPtr& input)
 {
-    g_vs.acc_speed = input->dspace_flag01;
-    g_vs.steering_wheel =  input->dspace_flag04;
-    g_vs.accelerator = input->dspace_flag05;
-    g_vs.brake_pos = input->dspace_flag06;
-    g_vs.rotating_speed = input->dspace_flag07;
+    g_vs.acc_speed = input->Dspace_Flag01;
+    g_vs.steering_wheel = input->Dspace_Flag04;
+    g_vs.accelerator = input->Dspace_Flag05;
+    g_vs.brake_pos = input->Dspace_Flag02;//ART 
+    g_vs.rotating_speed = input->Dspace_Flag07;
+    std::cout << "steering_wheel " << g_vs.steering_wheel << std::endl;
 }
 
 
-void callback_detObj(const msgs::msg::DetectedObjectArray::SharedPtr input)
+void callback_detObj(const msgs::DetectedObjectArray& input)
 {
   g_mutex_ros.lock();
-  g_det_obj_array = *input;
+  g_det_obj_array = input;
   g_mutex_ros.unlock();
 }
 
-void callback_gps(const msgs::msg::LidLLA::SharedPtr input)
+void callback_gps(const msgs::LidLLA& input)
 {
   std::cout << "callback gps " << std::endl;
   g_mutex_ros.lock();
-  g_gps = *input;
+  g_gps = input;
   g_mutex_ros.unlock();
 }
 
-void callback_veh(const msgs::msg::VehInfo::SharedPtr input)
+void callback_veh(const msgs::VehInfo& input)
 {
   g_mutex_ros.lock();
-  g_veh_info = *input;
+  g_veh_info = input;
   g_mutex_ros.unlock();
 }
 
-void callback_gnss2local(const geometry_msgs::msg::PoseStamped::SharedPtr input)
+void callback_gnss2local(const geometry_msgs::PoseStamped::ConstPtr& input)
 {
   g_mutex_ros.lock();
-  tf2::Quaternion gnss_q(input->pose.orientation.x, input->pose.orientation.y, input->pose.orientation.z,
+  tf::Quaternion gnss_q(input->pose.orientation.x, input->pose.orientation.y, input->pose.orientation.z,
                         input->pose.orientation.w);
-  tf2::Matrix3x3 gnss_m(gnss_q);
+  tf::Matrix3x3 gnss_m(gnss_q);
   g_current_gnss_pose.x = input->pose.position.x;
   g_current_gnss_pose.y = input->pose.position.y;
   g_current_gnss_pose.z = input->pose.position.z;
@@ -361,7 +354,7 @@ void callback_gnss2local(const geometry_msgs::msg::PoseStamped::SharedPtr input)
   g_mutex_ros.unlock();
 }
 
-void callback_fps(const std_msgs::msg::String::SharedPtr input)
+void callback_fps(const std_msgs::String::ConstPtr& input)
 {
   g_mutex_ros.lock();
   std::string json_string = input->data.c_str();
@@ -376,22 +369,34 @@ void callback_fps(const std_msgs::msg::String::SharedPtr input)
   }
   g_mutex_ros.unlock();
 }
-
-void callbackBusStopInfo(const msgs::msg::FlagInfo::SharedPtr input)
+void callback_currentPose(const geometry_msgs::PoseStamped::ConstPtr& input) {
+  g_mutex_ros.lock();
+  current_pose.x = input->pose.position.x;
+  current_pose.y = input->pose.position.y;
+  current_pose.z = input->pose.position.z;
+  g_mutex_ros.unlock();
+}
+void callback_speedCmd(const std_msgs::Float64::ConstPtr& input) {
+    speed_cmd = input->data;
+}
+void lidarlla_heading_Callback(const std_msgs::Float64::ConstPtr& heading){
+  lidarlla_heading = heading->data;
+}
+void callbackBusStopInfo(const msgs::Flag_Info::ConstPtr& input)
 {
   //std::cout << "<<<<<<<<<<<<<<<callbackBusStopInfo>>>>>>>>>>>>>>>" << std::endl;
   g_board_list = "";
   float stop[8];
   memset(stop, 0, sizeof(stop));
   g_mutex_ros.lock();
-  stop[0] = input->dspace_flag01;
-  stop[1] = input->dspace_flag02;
-  stop[2] = input->dspace_flag03;
-  stop[3] = input->dspace_flag04;
-  stop[4] = input->dspace_flag05;
-  stop[5] = input->dspace_flag06;
-  stop[6] = input->dspace_flag07;
-  stop[7] = input->dspace_flag08;
+  stop[0] = input->Dspace_Flag01;
+  stop[1] = input->Dspace_Flag02;
+  stop[2] = input->Dspace_Flag03;
+  stop[3] = input->Dspace_Flag04;
+  stop[4] = input->Dspace_Flag05;
+  stop[5] = input->Dspace_Flag06;
+  stop[6] = input->Dspace_Flag07;
+  stop[7] = input->Dspace_Flag08;
   std::vector<int> stopids;
   for (int i = 0; i < 8; i++)
   {
@@ -433,16 +438,16 @@ void callbackBusStopInfo(const msgs::msg::FlagInfo::SharedPtr input)
   g_mutex_ros.unlock();
 }
 
-void callbackNextStop(const msgs::msg::FlagInfo::SharedPtr input)
+void callbackNextStop(const msgs::Flag_Info::ConstPtr& input)
 {
   g_mutex_ros.lock();
-  g_cuttent_arrive_stop.id = g_route_id + (int)input->dspace_flag01;
-  g_cuttent_arrive_stop.status = (int)input->dspace_flag02;
+  g_cuttent_arrive_stop.id = g_route_id + (int)input->Dspace_Flag01;
+  g_cuttent_arrive_stop.status = (int)input->Dspace_Flag02;
   //cuttent_arrive_stop.round = (int) input->PX2_Flag01;
   g_mutex_ros.unlock();
 }
 
-void callbackMileage(const std_msgs::msg::String::SharedPtr input)
+void callbackMileage(const std_msgs::String::ConstPtr& input)
 {
   g_mutex_ros.lock();
   g_mile_json = input->data.c_str();
@@ -451,12 +456,12 @@ void callbackMileage(const std_msgs::msg::String::SharedPtr input)
   g_mutex_ros.unlock();
 }
 
-void callbackRound(const std_msgs::msg::Int32::SharedPtr input)
+void callbackRound(const std_msgs::Int32::ConstPtr& input)
 {
   g_cuttent_arrive_stop.round = (int) input->data;
 }
 
-void callbackSysReady(const std_msgs::msg::Bool::SharedPtr input)
+void callbackSysReady(const std_msgs::Bool::ConstPtr& input)
 {
     std::cout << "====================================" << input->data << std::endl;
     g_sys_ready = (bool)input->data;
@@ -484,7 +489,7 @@ std::string get_msg_type(int id)
   return "";
 }
 
-void callbackIMU(const sensor_msgs::msg::Imu::SharedPtr input)
+void callbackIMU(const sensor_msgs::Imu::ConstPtr& input)
 {
   g_imu.Gx = input->linear_acceleration.x;
   g_imu.Gy = input->linear_acceleration.y;
@@ -494,7 +499,7 @@ void callbackIMU(const sensor_msgs::msg::Imu::SharedPtr input)
   g_imu.Gyroz = input->angular_velocity.z;
 }
 
-void callbackBI(const msgs::msg::BackendInfo::SharedPtr input)
+void callbackBI(const msgs::BackendInfo::ConstPtr& input)
 {
   g_vs.motor_temperature = input->motor_temperature; //馬達溫度
   g_vs.tire_pressure = input->tire_pressure; //胎壓
@@ -515,7 +520,7 @@ void callbackBI(const msgs::msg::BackendInfo::SharedPtr input)
   g_vs.radar = input->radar; //radar
   g_vs.lidar = input->lidar;
   g_vs.camera = input->camera;
-  g_vs.gps = input->gps;
+  g_vs.GPS = input->GPS;
   g_vs.headlight = input->headlight; //大燈 0關1開
   g_vs.wiper = input->wiper; //雨刷 0關 1開
   g_vs.indoor_light = input->indoor_light; //車內燈 0關 1開
@@ -523,7 +528,7 @@ void callbackBI(const msgs::msg::BackendInfo::SharedPtr input)
   g_vs.left_turn_light = input->left_turn_light; //左方向燈 0關 1開
   g_vs.right_turn_light = input->right_turn_light;//右方向燈 0關 1開
   g_vs.estop = input->estop; //E-Stop 0關 1開
-  g_vs.acc_state = input->acc_state; //ACC電源狀態 0關 1開
+  g_vs.ACC_state = input->ACC_state; //ACC電源狀態 0關 1開
   g_vs.time = input->time; //標準時間
   g_vs.driving_time = input->driving_time; //行駛時間
   g_vs.mileage = input->mileage; //行駛距離
@@ -542,7 +547,7 @@ void callbackBI(const msgs::msg::BackendInfo::SharedPtr input)
 }
 
 
-void callbackSersorStatus(const std_msgs::msg::String::SharedPtr input)
+void callbackSersorStatus(const std_msgs::String::ConstPtr& input)
 {
   using namespace std;
   g_mutex_sensor.lock();
@@ -552,14 +557,14 @@ void callbackSersorStatus(const std_msgs::msg::String::SharedPtr input)
   g_mutex_sensor.unlock();
 }
 
-void callbackTracking(const msgs::msg::DetectedObjectArray::SharedPtr input)
+void callbackTracking(const msgs::DetectedObjectArray& input)
 {
   g_mutex_do.lock();
-  g_tracking_obj_array = *input;
+  g_tracking_obj_array = input;
   g_mutex_do.unlock();
 }
 
-void callbackFailSafe(const std_msgs::msg::String::SharedPtr input)
+void callbackFailSafe(const std_msgs::String::ConstPtr& input)
 {
   json J1 = json::parse(input->data.c_str());
   g_mutex_fail_safe.lock();
@@ -597,8 +602,8 @@ std::string get_jsonmsg_ros(const std::string& type)
   j1["dt"] = log_Time();
   if (type == "M8.2.adv001")
   {
-    j1["lat"] = g_gps.lidar_lat;
-    j1["lon"] = g_gps.lidar_lon;
+    j1["lat"] = g_gps.lidar_Lat;
+    j1["lon"] = g_gps.lidar_Lon;
     j1["speed"] = -1;
     j1["bearing"] = -1;
     j1["turn_signal"] = -1;
@@ -621,27 +626,27 @@ std::string get_jsonmsg_ros(const std::string& type)
     for (size_t i = 0; i < g_det_obj_array.objects.size(); i++)
     {
       json j2;
-      j2["object_adv_P0_x"] = g_det_obj_array.objects[i].b_point.p0.x;
-      j2["object_adv_P0_y"] = g_det_obj_array.objects[i].b_point.p0.y;
-      j2["object_adv_P1_x"] = g_det_obj_array.objects[i].b_point.p1.x;
-      j2["object_adv_P1_y"] = g_det_obj_array.objects[i].b_point.p1.y;
-      j2["object_adv_P2_x"] = g_det_obj_array.objects[i].b_point.p2.x;
-      j2["object_adv_P2_y"] = g_det_obj_array.objects[i].b_point.p2.y;
-      j2["object_adv_P3_x"] = g_det_obj_array.objects[i].b_point.p3.x;
-      j2["object_adv_P3_y"] = g_det_obj_array.objects[i].b_point.p3.y;
-      j2["object_adv_P4_x"] = g_det_obj_array.objects[i].b_point.p4.x;
-      j2["object_adv_P4_y"] = g_det_obj_array.objects[i].b_point.p4.y;
-      j2["object_adv_P5_x"] = g_det_obj_array.objects[i].b_point.p5.x;
-      j2["object_adv_P5_y"] = g_det_obj_array.objects[i].b_point.p5.y;
-      j2["object_adv_P6_x"] = g_det_obj_array.objects[i].b_point.p6.x;
-      j2["object_adv_P6_y"] = g_det_obj_array.objects[i].b_point.p6.y;
-      j2["object_adv_P7_x"] = g_det_obj_array.objects[i].b_point.p7.x;
-      j2["object_adv_P7_y"] = g_det_obj_array.objects[i].b_point.p7.y;
+      j2["object_adv_P0_x"] = g_det_obj_array.objects[i].bPoint.p0.x;
+      j2["object_adv_P0_y"] = g_det_obj_array.objects[i].bPoint.p0.y;
+      j2["object_adv_P1_x"] = g_det_obj_array.objects[i].bPoint.p1.x;
+      j2["object_adv_P1_y"] = g_det_obj_array.objects[i].bPoint.p1.y;
+      j2["object_adv_P2_x"] = g_det_obj_array.objects[i].bPoint.p2.x;
+      j2["object_adv_P2_y"] = g_det_obj_array.objects[i].bPoint.p2.y;
+      j2["object_adv_P3_x"] = g_det_obj_array.objects[i].bPoint.p3.x;
+      j2["object_adv_P3_y"] = g_det_obj_array.objects[i].bPoint.p3.y;
+      j2["object_adv_P4_x"] = g_det_obj_array.objects[i].bPoint.p4.x;
+      j2["object_adv_P4_y"] = g_det_obj_array.objects[i].bPoint.p4.y;
+      j2["object_adv_P5_x"] = g_det_obj_array.objects[i].bPoint.p5.x;
+      j2["object_adv_P5_y"] = g_det_obj_array.objects[i].bPoint.p5.y;
+      j2["object_adv_P6_x"] = g_det_obj_array.objects[i].bPoint.p6.x;
+      j2["object_adv_P6_y"] = g_det_obj_array.objects[i].bPoint.p6.y;
+      j2["object_adv_P7_x"] = g_det_obj_array.objects[i].bPoint.p7.x;
+      j2["object_adv_P7_y"] = g_det_obj_array.objects[i].bPoint.p7.y;
       j2["object_adv_lat"] = -1;
       j2["object_adv_lon"] = -1;
-      j2["object_adv_x"] = (g_det_obj_array.objects[i].b_point.p0.x + g_det_obj_array.objects[i].b_point.p7.x) / 2;
-      j2["object_adv_y"] = (g_det_obj_array.objects[i].b_point.p0.y + g_det_obj_array.objects[i].b_point.p7.y) / 2;
-      j2["object_type"] = g_det_obj_array.objects[i].class_id;
+      j2["object_adv_x"] = (g_det_obj_array.objects[i].bPoint.p0.x + g_det_obj_array.objects[i].bPoint.p7.x) / 2;
+      j2["object_adv_y"] = (g_det_obj_array.objects[i].bPoint.p0.y + g_det_obj_array.objects[i].bPoint.p7.y) / 2;
+      j2["object_type"] = g_det_obj_array.objects[i].classId;
       j2["object_status"] = -1;
       j2["object_length"] = -1;
       j1["object_list"] += j2;
@@ -658,12 +663,17 @@ std::string get_jsonmsg_to_obu(const std::string& type)
   if (type == "M8.2.adv009")
   {
     j1["type"] = type;
-    j1["lat"] = std::to_string(g_gps.lidar_lat);
-    j1["lon"] = std::to_string(g_gps.lidar_lon);
+    j1["lat"] = std::to_string(g_gps.lidar_Lat);
+    j1["lon"] = std::to_string(g_gps.lidar_Lon);
     j1["speed"] = std::to_string(g_vs.acc_speed);
-    j1["bearing"] = std::to_string(g_current_gnss_pose.yaw * 180 / PI);
+    //j1["bearing"] = std::to_string(g_current_gnss_pose.yaw * 180 / PI);
+    j1["bearing"] = std::to_string(lidarlla_heading);
     j1["brake"] = std::to_string(g_vs.brake_pos);
     j1["steering"] = std::to_string(g_vs.steering_wheel);
+    j1["currentPose_x"] = std::to_string(current_pose.x);
+    j1["currentPose_y"] = std::to_string(current_pose.y);
+    j1["currentPose_z"] = std::to_string(current_pose.z);
+    j1["speedInfo"] = std::to_string(speed_cmd);
   }
   return j1.dump();
 }
@@ -681,8 +691,10 @@ std::string get_jsonmsg_to_vk_server(const std::string& type)
     j1["airpressure"] = g_vs.air_pressure; //氣壓 //0.0;
     j1["electricity"] = g_vs.battery; //電量//0.0;
     j1["steering"] = g_vs.steer; // 轉向 
-    j1["bearing"] = g_current_gnss_pose.yaw * 180 / PI;
-    j1["heading"] = g_current_gnss_pose.yaw * 180 / PI;;
+    //j1["bearing"] = g_current_gnss_pose.yaw * 180 / PI;
+    j1["bearing"] = lidarlla_heading;
+    //j1["heading"] = g_current_gnss_pose.yaw * 180 / PI;;
+    j1["heading"] = lidarlla_heading;
     j1["milage"] =  g_vs.odometry; //行駛距離//0.0;
     j1["speed"] = g_vs.speed; //vs.speed 車速 目前來源PLC
     j1["rotate"] = g_vs.rotating_speed; //轉速 //0.0;
@@ -700,7 +712,7 @@ std::string get_jsonmsg_to_vk_server(const std::string& type)
     j1["leftlight"] = convertBoolean(g_vs.left_turn_light); //左方向燈; //true
     j1["rightlight"] = convertBoolean(g_vs.right_turn_light); //右方向燈//true;
     j1["EStop"] = convertBoolean(g_vs.estop); // E-Stop//true;
-    j1["ACCpower"] = convertBoolean(g_vs.acc_state); //ACC 電源//true;
+    j1["ACCpower"] = convertBoolean(g_vs.ACC_state); //ACC 電源//true;
     j1["ArrivedStop"] = g_cuttent_arrive_stop.id; //目前來源 NextStop/Info
     j1["ArrivedStopStatus"] = g_cuttent_arrive_stop.status; // 目前來源NextStop/Info
     j1["round"] = g_cuttent_arrive_stop.round; //目前來源 BusStop/Round
@@ -735,8 +747,10 @@ std::string get_jsonmsg_to_vk_server(const std::string& type)
     j1["airpressure"] = g_vs.air_pressure; //氣壓 //0.0;
     j1["electricity"] =  g_vs.battery; //電量//0.0;
     j1["steering"] = g_vs.steer; // 轉向 
-    j1["bearing"] = g_current_gnss_pose.yaw * 180 / PI;
-    j1["heading"] = g_current_gnss_pose.yaw * 180 / PI;;
+    //j1["bearing"] = g_current_gnss_pose.yaw * 180 / PI;
+    j1["bearing"] = lidarlla_heading;
+    //j1["heading"] = g_current_gnss_pose.yaw * 180 / PI;;
+    j1["heading"] = lidarlla_heading;
     j1["milage"] = g_vs.odometry; //行駛距離//0.0;
     j1["speed"] = g_vs.speed; //vs.speed 車速 
     j1["rotate"] = g_vs.rotating_speed; //轉速 //0.0;
@@ -754,7 +768,7 @@ std::string get_jsonmsg_to_vk_server(const std::string& type)
     j1["leftlight"] = convertBoolean(g_vs.left_turn_light); //左方向燈; //true
     j1["rightlight"] = convertBoolean(g_vs.right_turn_light); //右方向燈//true;
     j1["EStop"] = convertBoolean(g_vs.estop); // E-Stop//true;
-    j1["ACCpower"] = convertBoolean(g_vs.acc_state); //ACC 電源//true;
+    j1["ACCpower"] = convertBoolean(g_vs.ACC_state); //ACC 電源//true;
     j1["route_id"] = g_route_id; //default 2000
     j1["RouteMode"] = 2;
     j1["Gx"] = g_imu.Gx; //   目前來源 imu_data_rad
@@ -775,8 +789,8 @@ std::string get_jsonmsg_to_vk_server(const std::string& type)
     j1["board_list"] = g_board_list;
     j1["sys_ready"] = g_sys_ready;
   }else if (type == "M8.2.VK003"){
-    j1["lat"] = g_gps.lidar_lat;
-    j1["lng"] = g_gps.lidar_lon;
+    j1["lat"] = g_gps.lidar_Lat;
+    j1["lng"] = g_gps.lidar_Lon;
     json J0 = json::parse(g_event_json);
     j1["module"] = J0.at("module");
     j1["status"] = J0.at("status");
@@ -866,7 +880,7 @@ void sendRun(int argc, char** argv)
   udp_back_client.initial(UDP_AWS_SRV_ADRR, UDP_AWS_SRV_PORT);
   udp_obu_client.initial(UDP_OBU_ADRR, UDP_OBU_PORT);
   udp_vk_client.initial(UDP_VK_SRV_ADRR, UDP_VK_SRV_PORT);
-  udp_tablet_client.initial("192.168.1.3", 9876);
+  udp_tablet_client.initial("192.168.4.2", 9876);
   udp_vk_fg_client.initial("140.134.128.42", 8888);
   udp_vk_fail_safe_client.initial(UDP_VK_SRV_ADRR, 55554);
   udp_vk_a_plus_sensor_client.initial(UDP_VK_SRV_ADRR, UDP_VK_SRV_A_PLUS_SENSOR_PORT);
@@ -929,6 +943,13 @@ void sendRun(int argc, char** argv)
       while(!g_mqtt_gnss_queue.empty())
       {
         json gnss = g_mqtt_gnss_queue.front();
+        double lat = gnss["coord"][0];
+        double lon = gnss["coord"][1];
+        if(lat == 0 || lon == 0)
+        {
+          g_mqtt_gnss_queue.pop();
+          continue;
+        }
         gnss_list.push_back(gnss);
         g_mqtt_gnss_queue.pop();
       }
@@ -1116,14 +1137,14 @@ void receiveUDPRun2(int argc, char** argv)
 
 void sendROSRun(int argc, char** argv)
 {
-  while (rclcpp::ok())
+  while (ros::ok())
   {
     g_mutex_traffic_light.lock();
     while (!g_traffic_light_queue.empty())
     {
       std::string traffic_msg = g_traffic_light_queue.front();
       g_traffic_light_queue.pop();
-      msgs::msg::Spat spat;
+      msgs::Spat spat;
       std::cout << "traffic_msg: " << traffic_msg << std::endl;
       try
       {
@@ -1142,7 +1163,7 @@ void sendROSRun(int argc, char** argv)
       } 
       catch(std::exception& e)
       {
-        std::cout << "parsing fail: " << e.what() << " "<<std::endl;
+        std::cout << "parsing fail 1: " << e.what() << " "<<std::endl;
       }
     }
     g_mutex_traffic_light.unlock();
@@ -1150,11 +1171,12 @@ void sendROSRun(int argc, char** argv)
         g_mutex_other_car.lock();
         std::string other_car_msg = g_other_car_queue.front();
         g_other_car_queue.pop();
-        msgs::msg::Obu obu;
-        std::cout << "other car msg : " << other_car_msg << std::endl;
+        msgs::Obu obu;
+        std::cout<<"OBU_Info: "<<json::parse(other_car_msg)<<std::endl;
         try{
             json j0 = json::parse(other_car_msg);
             json j1 = j0.at("OBU_Info");
+            /*
             obu.obu_id = j1.at("obu_id");
             obu.timestamp = j1.at("timestamp");
             obu.speed = j1.at("speed");
@@ -1164,8 +1186,17 @@ void sendROSRun(int argc, char** argv)
             obu.brake = j1.at("brake");
             obu.streering = j1.at("steering");
             RosModuleTraffic::publishOtherCar(obu);
+            */
+            Pose pose_fromOBU;
+            pose_fromOBU.x = (float)j1.at("currentPose_x");
+            pose_fromOBU.y = (float)j1.at("currentPose_y");
+            pose_fromOBU.z = (float)j1.at("currentPose_z");
+            RosModuleTraffic::publishCurrentPose(pose_fromOBU);
+            RosModuleTraffic::publishSpeedCmd((float)j1.at("speedInfo"));
+            std::cout<<"cout: "<<j1.at("currentPose_x")<<std::endl;
+            printf("json: %f\n", (float)j1.at("currentPose_x"));
         }catch(std::exception& e){
-            std::cout << "parsing fail: " << e.what() << " "<<std::endl;
+            std::cout << "parsing fail 2: " << e.what() << " "<<std::endl;
         }
         g_mutex_other_car.unlock();
     }
@@ -1173,7 +1204,7 @@ void sendROSRun(int argc, char** argv)
     RosModuleTraffic::publishRoute(TOPIC_ROUTE, g_route_info);
 
     boost::this_thread::sleep(boost::posix_time::microseconds(500000));
-    rclcpp::spin_some(n);
+    ros::spinOnce();
   }
 }
 
@@ -1185,10 +1216,11 @@ void receiveRosRun(int argc, char** argv)
   RosModuleTraffic::RegisterCallBack(callback_detObj, callback_gps, callback_veh, callback_gnss2local, callback_fps,
                                      callbackBusStopInfo, callbackMileage, callbackNextStop, callbackRound, callbackIMU, 
                                      callbackSysReady, callbackBI,callbackSersorStatus,callbackTracking,callbackFailSafe,               
-                                     callback_flag_info04, callback_flag_info02, is_new_map);
+                                     callback_flag_info04, callback_flag_info02, callback_currentPose, callback_speedCmd, lidarlla_heading_Callback, 
+                                     is_new_map);
 
 
-  while (rclcpp::ok())
+  while (ros::ok())
   {
     g_mutex_ros.lock();
     std::string temp_adv001 = get_jsonmsg_ros("M8.2.adv001");
@@ -1279,7 +1311,7 @@ void receiveRosRun(int argc, char** argv)
     g_mutex_ros.unlock();
 
     boost::this_thread::sleep(boost::posix_time::microseconds(ROS_UPDATE_MICROSECONDS));
-    rclcpp::spin_some(n);
+    ros::spinOnce();
   }
 }
 
@@ -1411,9 +1443,9 @@ void VK102callback(const std::string& request)
   */
   //char msg[36];
   //sprintf(msg, "%d#%d", in_stopid, out_stopid);
-  msgs::msg::StopInfoArray reserve;
-  msgs::msg::StopInfo in_stop_info;
-  msgs::msg::StopInfo out_stop_info;
+  msgs::StopInfoArray reserve;
+  msgs::StopInfo in_stop_info;
+  msgs::StopInfo out_stop_info;
   
   in_stop_info.round = in_round;
   in_stop_info.id = in_stopid;
@@ -1470,10 +1502,10 @@ void VK103callback(json reqJson)
     return;
   }
 
-  msgs::msg::StopInfoArray reserve;
+  msgs::StopInfoArray reserve;
   for (size_t i = 0 ; i < stopids.size(); i++)
   {
-    msgs::msg::StopInfo stop;
+    msgs::StopInfo stop;
     stop.round = 1;
     stop.id = stopids[i];
     reserve.stops.push_back(stop);
@@ -1532,7 +1564,7 @@ void VK104callback(json reqJson)
    g_route_info.stops.clear();
    for (size_t i = 0 ; i < stopids.size(); i++)
    {
-     msgs::msg::StopInfo stop;
+     msgs::StopInfo stop;
      stop.round = 1;
      stop.id = stopids[i];
      g_route_info.stops.push_back(stop);
@@ -1634,7 +1666,7 @@ double get_GNSS_heading_360(double heading)
     }
     return result;
 }
-
+/*
 json genMqttGnssMsg()
 {
   using namespace std::chrono;
@@ -1646,12 +1678,28 @@ json genMqttGnssMsg()
   double alt = g_current_gnss_pose.z;
   gnss["coord"] = {lat, lon, alt};
   //gnss["speed"] = -1; remove speed
+  //lidarlla_heading_sub = nh.subscribe("lidar_lla_heading", 1, lidarCallback_1);
   gnss["heading"] = get_GNSS_heading_360(g_current_gnss_pose.yaw * 180 / PI);
   gnss["timestamp"] = timestamp_ms;
   gnss["source_time"] = timestamp_ms;
   return gnss;
 }
-
+*/
+json genMqttGnssMsg() {
+  using namespace std::chrono;
+  json gnss;
+  uint64_t timestamp_ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+  //uint64_t source_ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
+  double lat = g_current_gnss_pose.x;
+  double lon = g_current_gnss_pose.y;
+  double alt = g_current_gnss_pose.z;
+  gnss["coord"] = {lat, lon, alt};
+  //gnss["speed"] = -1; remove speed
+  gnss["heading"] = lidarlla_heading;
+  gnss["timestamp"] = timestamp_ms;
+  gnss["source_time"] = timestamp_ms;
+  return gnss;
+}
 json genMqttBmsMsg()
 {
   using namespace std::chrono;
@@ -1754,7 +1802,7 @@ json getMqttDOMsg(){
     for (size_t i = 0; i < g_tracking_obj_array.objects.size(); i++)
     {
          json obj;
-         obj["classification"] = g_tracking_obj_array.objects[i].class_id;
+         obj["classification"] = g_tracking_obj_array.objects[i].classId;
          obj["tid"] = g_tracking_obj_array.objects[i].track.id;
          obj["do_coordinate"] = {    
             g_tracking_obj_array.objects[i].center_point_gps.x,
@@ -1821,7 +1869,6 @@ void mqttPubRun(int argc, char** argv)
 
 int main(int argc, char** argv)
 {
-  std::cout << 'hahaha' << std::endl;
   using namespace std;
   RosModuleTraffic::Initial(argc, argv);
   g_plate = RosModuleTraffic::getPlate();
@@ -1879,10 +1926,10 @@ int main(int argc, char** argv)
 
   boost::thread thread_mqtt_send(mqttPubRun, argc, argv);
 
-  msgs::msg::StopInfoArray empty;
+  msgs::StopInfoArray empty;
   RosModuleTraffic::publishReserve(TOPIC_RESERVE, empty);
   /*block main.*/
-  while (rclcpp::ok())
+  while (ros::ok())
   {
     boost::this_thread::sleep(boost::posix_time::microseconds(1000000));
   }

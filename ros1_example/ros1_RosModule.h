@@ -10,6 +10,7 @@
 #include "std_msgs/String.h"
 #include "std_msgs/Bool.h"
 #include "std_msgs/Int32.h"
+#include "std_msgs/Float64.h"
 #include "msgs/Flag_Info.h"
 #include "msgs/StopInfoArray.h"
 #include "msgs/StopInfo.h"
@@ -18,8 +19,9 @@
 #include "sensor_msgs/Imu.h"
 #include "msgs/Spat.h"
 #include "msgs/Obu.h"
-
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
+#include "msgs/SpeedFeedback.h"
+
 #include <tf/tf.h>
 #include <chrono>
 #include <thread>
@@ -28,6 +30,17 @@ static ros::Publisher othercar_pub;
 static ros::Publisher traffic_pub;
 static ros::Publisher backend_pub;
 static ros::Publisher occ_pub;
+static ros::Publisher currentPose_vToV_pub;
+static ros::Publisher speedCmd_vToV_pub;
+
+struct Pose {
+  double x;
+  double y;
+  double z;
+  double roll;
+  double pitch;
+  double yaw;
+};
 
 class RosModuleTraffic
 {
@@ -39,10 +52,12 @@ class RosModuleTraffic
     {
       ros::init (argc, argv, "adv_to_server");
       ros::NodeHandle n;
-      othercar_pub =  n.advertise<msgs::Spat>("/obu", 1000);
+      othercar_pub =  n.advertise<msgs::Obu>("/obu", 1000);
       traffic_pub = n.advertise<msgs::Spat>("/traffic", 1000);
       backend_pub = n.advertise<std_msgs::Bool>("/backend_sender/status", 1000);
       occ_pub = n.advertise<std_msgs::Bool>("/occ_sender/status", 1000);
+      currentPose_vToV_pub = n.advertise<geometry_msgs::PoseStamped>("/vToV/currentPose", 10);
+      speedCmd_vToV_pub = n.advertise<std_msgs::Float64>("/vToV/speedCmd", 10);
     }
 
     static std::string getPlate(){
@@ -65,48 +80,30 @@ class RosModuleTraffic
         }
     }
 
-    static void
-    RegisterCallBack (void
-                      (*cb1) (const msgs::DetectedObjectArray&),
-                      void
-                      (*cb2) (const msgs::LidLLA&),
-                      void
-                      (*cb3) (const msgs::VehInfo&),
-                      void
-                      (*cb4) (const geometry_msgs::PoseStamped::ConstPtr&),
-                      void
-                      (*cb5) (const std_msgs::String::ConstPtr&),
-                      void
-                      (*cb6) (const msgs::Flag_Info::ConstPtr&),
-                      void
-                      (*cb7) (const std_msgs::String::ConstPtr&),
-                      void
-                      (*cb8) (const msgs::Flag_Info::ConstPtr&),
-                      void
-                      (*cb9) (const std_msgs::Int32::ConstPtr&),
-                      void
-                      (*cb10) (const sensor_msgs::Imu::ConstPtr&),
-                      void
-                      (*cb11) (const std_msgs::Bool::ConstPtr&),
-                      void
-                      (*cb12) (const msgs::BackendInfo::ConstPtr&),
-                      void
-                      (*cb13) (const std_msgs::String::ConstPtr&),
-                      void
-                      (*cb14) (const msgs::DetectedObjectArray&),
-                      void
-                      (*cb15) (const std_msgs::String::ConstPtr&),
-                      void
-                      (*cb16) (const msgs::Flag_Info::ConstPtr&),
-                      void
-                      (*cb17) (const msgs::Flag_Info::ConstPtr&),
-                      bool isNewMap)
-    {
+    static void RegisterCallBack (void(*cb1) (const msgs::DetectedObjectArray&),
+                      void(*cb2) (const msgs::LidLLA&),
+                      void(*cb3) (const msgs::VehInfo&),
+                      void(*cb4) (const geometry_msgs::PoseStamped::ConstPtr&),
+                      void(*cb5) (const std_msgs::String::ConstPtr&),
+                      void(*cb6) (const msgs::Flag_Info::ConstPtr&),
+                      void(*cb7) (const std_msgs::String::ConstPtr&),
+                      void(*cb8) (const msgs::Flag_Info::ConstPtr&),
+                      void(*cb9) (const std_msgs::Int32::ConstPtr&),
+                      void(*cb10) (const sensor_msgs::Imu::ConstPtr&),
+                      void(*cb11) (const std_msgs::Bool::ConstPtr&),
+                      void(*cb12) (const msgs::BackendInfo::ConstPtr&),
+                      void(*cb13) (const std_msgs::String::ConstPtr&),
+                      void(*cb14) (const msgs::DetectedObjectArray&),
+                      void(*cb15) (const std_msgs::String::ConstPtr&),
+                      void(*cb16) (const msgs::Flag_Info::ConstPtr&),
+                      void(*cb17) (const msgs::Flag_Info::ConstPtr&),
+                      void(*cb18) (const geometry_msgs::PoseStamped::ConstPtr&),
+                      void(*cb19) (const std_msgs::Float64::ConstPtr&),
+                      void(*cb20) (const std_msgs::Float64::ConstPtr&),
+                      bool isNewMap) {
       ros::NodeHandle n;
       static ros::Subscriber detObj = n.subscribe ("LidarDetection", 1, cb1);
-     
       static ros::Subscriber vehInfo = n.subscribe ("veh_info", 1, cb3);
-
       if(isNewMap){
         std::cout << "===============================subscribe for new map" << std::endl;
         static ros::Subscriber gps = n.subscribe ("lidar_lla_wgs84", 1, cb2);
@@ -116,7 +113,6 @@ class RosModuleTraffic
         static ros::Subscriber gps = n.subscribe ("lidar_lla", 1, cb2);
         static ros::Subscriber gnss2local_sub = n.subscribe("gnss2local_data", 1, cb4);
       }
-      
       static ros::Subscriber fps = n.subscribe("/GUI/topic_fps_out", 1, cb5);
       static ros::Subscriber busStopInfo = n.subscribe("/BusStop/Info", 1, cb6);
       static ros::Subscriber reverse = n.subscribe("/mileage/relative_mileage", 1, cb7);
@@ -132,39 +128,30 @@ class RosModuleTraffic
       static ros::Subscriber fail_safe = n.subscribe("/vehicle/report/itri/fail_safe_status", 1, cb15);
       static ros::Subscriber flag04 = n.subscribe("/Flag_Info04", 1, cb16);
       static ros::Subscriber flag02 = n.subscribe("/Flag_Info02", 1, cb17);
+      static ros::Subscriber sub_currentPose = n.subscribe("/current_pose", 1, cb18);
+      static ros::Subscriber sub_speedInfo = n.subscribe("control/speed_cmd", 1, cb19);
+      static ros::Subscriber lidarlla_heading_sub = n.subscribe("lidar_lla_heading", 1, cb20);
     }
 
-    static void
-    publishOtherCar(msgs::Obu input)
-    {
+    static void publishOtherCar(msgs::Obu input) {
       //std::cout << "publishOtherCar topic " << topic <<  std::endl;
       othercar_pub.publish(input);
     }
-
-    static void
-    publishTraffic(std::string topic, msgs::Spat input)
-    {
+    static void publishTraffic(std::string topic, msgs::Spat input) {
       std::cout << "publishTraffic topic " << topic <<  std::endl;
       traffic_pub.publish(input);
     }
-
-    static void pubBackendState(bool input)
-    {
+    static void pubBackendState(bool input) {
         std_msgs::Bool result;
         result.data = input;
         backend_pub.publish(result);
     }
-
-    static void pubOCCState(bool input)
-    {
+    static void pubOCCState(bool input) {
         std_msgs::Bool result;
         result.data = input;
         occ_pub.publish(result);
     }
-
-    static void
-    publishServerStatus(std::string topic, bool input)
-    {
+    static void publishServerStatus(std::string topic, bool input) {
       //std::cout << "publishServerStatus topic " << topic << " , input " << input << std::endl;
       ros::NodeHandle n;
       static ros::Publisher server_status_pub = n.advertise<std_msgs::Bool>(topic, 1000);
@@ -172,10 +159,7 @@ class RosModuleTraffic
       msg.data = input;
       server_status_pub.publish(msg);
     }
-
-    static void
-    publishReserve(std::string topic, msgs::StopInfoArray msg)
-    {
+    static void publishReserve(std::string topic, msgs::StopInfoArray msg) {
       //std::cout << "publishReserve topic " << topic  << std::endl;
       ros::NodeHandle n;
       static ros::Publisher reserve_status_pub = n.advertise<msgs::StopInfoArray>(topic, 1000);
@@ -194,10 +178,7 @@ class RosModuleTraffic
         }
       } 
     }
-
-    static void
-    publishRoute(std::string topic, msgs::RouteInfo msg)
-    {
+    static void publishRoute(std::string topic, msgs::RouteInfo msg) {
       //std::cout << "publishReserve topic " << topic  << std::endl;
       ros::NodeHandle n;
       static ros::Publisher route_pub = n.advertise<msgs::RouteInfo>(topic, 1000);
@@ -215,6 +196,18 @@ class RosModuleTraffic
           return;
         }
       } 
+    }
+    static void publishCurrentPose(Pose aPose) {
+        geometry_msgs::PoseStamped msg;
+        msg.pose.position.x = aPose.x;
+        msg.pose.position.y = aPose.y;
+        msg.pose.position.z = aPose.z;
+        currentPose_vToV_pub.publish(msg);
+    }
+    static void publishSpeedCmd(double speedKPH) {
+        std_msgs::Float64 msg;
+        msg.data = speedKPH;
+        speedCmd_vToV_pub.publish(msg);
     }
 };
 
