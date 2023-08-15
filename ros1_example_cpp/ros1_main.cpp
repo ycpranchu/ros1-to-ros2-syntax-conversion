@@ -52,20 +52,20 @@ const std::string TOPIC_TRAFFIC = "/traffic";
 const std::string TOPIC_SERCER_STATUS = "/backend/connected";
 // reserve bus
 const std::string TOPIC_RESERVE = "/reserve/request";
-// route 
+// route
 const std::string TOPIC_ROUTE = "/reserve/route";
 
 const int SEND_CHECK_MICROSECONDS = 500 * 1000; // 0.5 sec
 // wait reserve result: 300ms.
 const int REVERSE_SLEEP_TIME_MICROSECONDS = 300 * 1000;
-//reserve waiting timeout: 3 seconds
+// reserve waiting timeout: 3 seconds
 const int RESERVE_WAITING_TIMEOUT = 3 * 1000 * 1000;
 // UDP server udpate from queues freq 100ms
 const int UDP_SERVER_UPDATE_MICROSECONDS = 100 * 1000;
 // ROS update time: 100ms
 const int ROS_UPDATE_MICROSECONDS = 100 * 1000;
 // server status update time: 10 sec
-//const int SERVER_STATUS_UPDATE_MICROSECONDS = 10 * 1000 * 1000;
+// const int SERVER_STATUS_UPDATE_MICROSECONDS = 10 * 1000 * 1000;
 
 enum ecu_type
 {
@@ -94,7 +94,7 @@ boost::mutex g_mutex_mqtt;
 boost::mutex g_mutex_sensor;
 boost::mutex g_mutex_do;
 boost::mutex g_mutex_fail_safe;
-//boost::mutex mutex_serverStatus;
+// boost::mutex mutex_serverStatus;
 
 // ros queue
 std::queue<std::string> g_ros_queue;
@@ -124,13 +124,13 @@ msgs::DetectedObjectArray g_tracking_obj_array;
 msgs::LidLLA g_gps;
 msgs::VehInfo g_veh_info;
 geometry_msgs::PoseStamped msg_pose;
-json g_fps_json = { { "key", 0 } };
+json g_fps_json = {{"key", 0}};
 std::string g_vk102_response;
 std::string g_mile_json;
 std::string g_event_json;
 std::string g_status_json;
 msgs::RouteInfo g_route_info;
-std::string g_board_list="00000000";
+std::string g_board_list = "00000000";
 int g_route_id = 2000;
 
 MqttClient g_mqtt_client;
@@ -141,7 +141,7 @@ long g_event_send_count = 0;
 
 const static double PI = 3.14;
 // can data
-double g_can_data[10] = { 0 };
+double g_can_data[10] = {0};
 
 // traffic light buffer
 char g_taffic_light_buffer[1024];
@@ -153,22 +153,21 @@ std::string g_plate = "ITRI-ADV";
 std::string g_vid = "vid";
 const static int FPS_KEY_LEN = 27 + 16;
 const static std::string keys[] = {
-  "FPS_LidarAll",         "FPS_LidarDetection",   "FPS_camF_right",        "FPS_camF_center",     "FPS_camF_left",
-  "FPS_camF_top",         "FPS_camR_front",       "FPS_camR_rear",         "FPS_camL_front",      "FPS_camL_rear",
-  "FPS_camB_top",         "FPS_CamObjFrontRight", "FPS_CamObjFrontCenter", "FPS_CamObjFrontLeft", "FPS_CamObjFrontTop",
-  "FPS_CamObjRightFront", "FPS_CamObjRightBack",  "FPS_CamObjLeftFront",   "FPS_CamObjLeftBack",  "FPS_CamObjBackTop",
-  "FPS_current_pose",     "FPS_veh_info",         "FPS_dynamic_path_para", "FPS_Flag_Info01",     "FPS_Flag_Info02",
-  "FPS_Flag_Info03",      "FPS_V2X_msg",          "FPS_camfront_bottom_60","FPS_camtop_close_120","FPS_camfront_top_far_30",
-  "FPS_camleft_back_60",  "FPS_camleft_front_60", "FPS_camright_back_60",  "FPS_camright_front_60","FPS_camback_top_120",
-  "FPS_cam_objfront_bottom_60","FPS_cam_objront_top_close_120","FPS_cam_objfront_top_far_30", "FPS_cam_objleft_back_60",
-  "FPS_cam_objleft_front_60",  "FPS_cam_objright_back_60",     "FPS_cam_objright_front_60",   "FPS_cam_objback_top_120"
-};
+    "FPS_LidarAll", "FPS_LidarDetection", "FPS_camF_right", "FPS_camF_center", "FPS_camF_left",
+    "FPS_camF_top", "FPS_camR_front", "FPS_camR_rear", "FPS_camL_front", "FPS_camL_rear",
+    "FPS_camB_top", "FPS_CamObjFrontRight", "FPS_CamObjFrontCenter", "FPS_CamObjFrontLeft", "FPS_CamObjFrontTop",
+    "FPS_CamObjRightFront", "FPS_CamObjRightBack", "FPS_CamObjLeftFront", "FPS_CamObjLeftBack", "FPS_CamObjBackTop",
+    "FPS_current_pose", "FPS_veh_info", "FPS_dynamic_path_para", "FPS_Flag_Info01", "FPS_Flag_Info02",
+    "FPS_Flag_Info03", "FPS_V2X_msg", "FPS_camfront_bottom_60", "FPS_camtop_close_120", "FPS_camfront_top_far_30",
+    "FPS_camleft_back_60", "FPS_camleft_front_60", "FPS_camright_back_60", "FPS_camright_front_60", "FPS_camback_top_120",
+    "FPS_cam_objfront_bottom_60", "FPS_cam_objront_top_close_120", "FPS_cam_objfront_top_far_30", "FPS_cam_objleft_back_60",
+    "FPS_cam_objleft_front_60", "FPS_cam_objright_back_60", "FPS_cam_objright_front_60", "FPS_cam_objback_top_120"};
 
 struct ArriveStop
 {
-  int id; // next stop id
+  int id;     // next stop id
   int status; // stauts
-  int round; // current round
+  int round;  // current round
 };
 
 struct IMU
@@ -186,60 +185,59 @@ struct IMU
 
 struct VehicelStatus
 {
-  
-  float motor_temperature; //馬達
-  float tire_pressure; //胎壓
-  float air_pressure; //氣壓
-  float battery; //電量 %
-  float steer; //轉向
-  float localization; //定位
-  float odometry; //里程
-  float speed; //車速 km/hr
-  float rotating_speed; //轉速
-  float bus_stop; //站點
-  float vehicle_number; //車號
-  float gear; //檔位
-  int hand_brake; //手煞車
-  float steering_wheel; //方向盤 0關1開
-  int door; //車門 0關1開
-  int air_conditioner; //空調
-  float radar; //radar
+
+  float motor_temperature; // 馬達
+  float tire_pressure;     // 胎壓
+  float air_pressure;      // 氣壓
+  float battery;           // 電量 %
+  float steer;             // 轉向
+  float localization;      // 定位
+  float odometry;          // 里程
+  float speed;             // 車速 km/hr
+  float rotating_speed;    // 轉速
+  float bus_stop;          // 站點
+  float vehicle_number;    // 車號
+  float gear;              // 檔位
+  int hand_brake;          // 手煞車
+  float steering_wheel;    // 方向盤 0關1開
+  int door;                // 車門 0關1開
+  int air_conditioner;     // 空調
+  float radar;             // radar
   float lidar;
   float camera;
   float GPS;
-  int headlight; //大燈 0關1開
-  int wiper; //雨刷 0關 1開
-  int indoor_light; //車內燈 0關 1開
-  int gross_power; //總電源 0關 1開
-  int left_turn_light; //左方向燈 0關 1開
-  int right_turn_light;//右方向燈 0關 1開
-  int estop; //E-Stop 0關 1開
-  int ACC_state; //ACC電源狀態 0關 1開
-  float time; //標準時間
-  float driving_time; //行駛時間
-  float mileage; //行駛距離
+  int headlight;        // 大燈 0關1開
+  int wiper;            // 雨刷 0關 1開
+  int indoor_light;     // 車內燈 0關 1開
+  int gross_power;      // 總電源 0關 1開
+  int left_turn_light;  // 左方向燈 0關 1開
+  int right_turn_light; // 右方向燈 0關 1開
+  int estop;            // E-Stop 0關 1開
+  int ACC_state;        // ACC電源狀態 0關 1開
+  float time;           // 標準時間
+  float driving_time;   // 行駛時間
+  float mileage;        // 行駛距離
   float accelerator;
   float brake_pos;
-  float acc_speed; //用於控制自動跟車的speed
-
+  float acc_speed; // 用於控制自動跟車的speed
 };
 
 struct BatteryInfo
 {
-  float gross_voltage;//總電壓 V
-  float gross_current;//總電流 A
-  float highest_voltage; //最高電池電壓 0.01V
-  float highest_number; //最高電壓電池位置 電池編號
-  float lowest_volage; //最低電池電壓 0.01V
-  float lowest_number; //最低電壓電池位置 電池編號
-  float voltage_deviation; //高低電壓叉 0.01V
-  float highest_temp_location; //電池最高環境溫度位置 區域編號
-  float highest_temperature; //電池最高環境溫度
+  float gross_voltage;         // 總電壓 V
+  float gross_current;         // 總電流 A
+  float highest_voltage;       // 最高電池電壓 0.01V
+  float highest_number;        // 最高電壓電池位置 電池編號
+  float lowest_volage;         // 最低電池電壓 0.01V
+  float lowest_number;         // 最低電壓電池位置 電池編號
+  float voltage_deviation;     // 高低電壓叉 0.01V
+  float highest_temp_location; // 電池最高環境溫度位置 區域編號
+  float highest_temperature;   // 電池最高環境溫度
 };
 
-float g_mode; //模式 自動/半自動/手動/鎖定
-float g_emergency_exit; //緊急出口
-  
+float g_mode;           // 模式 自動/半自動/手動/鎖定
+float g_emergency_exit; // 緊急出口
+
 Pose g_current_gnss_pose;
 Pose current_pose;
 float speed_cmd = 0.;
@@ -265,9 +263,8 @@ bool g_backend_state_006 = false;
 bool g_occ_state = false;
 bool g_sys_ready = false;
 
-
 /*=========================tools begin=========================*/
-bool checkCommand(int argc, char** argv, const std::string& command)
+bool checkCommand(int argc, char **argv, const std::string &command)
 {
   for (int i = 0; i < argc; i++)
   {
@@ -279,10 +276,12 @@ bool checkCommand(int argc, char** argv, const std::string& command)
   return false;
 }
 
-char* log_Time()
+char *log_Time()
 {
-  struct tm* ptm;
-  struct timeb stTimeb{};
+  struct tm *ptm;
+  struct timeb stTimeb
+  {
+  };
   static char szTime[24];
 
   ftime(&stTimeb);
@@ -301,32 +300,30 @@ bool convertBoolean(int state)
 
 /*========================= ROS callbacks begin=========================*/
 
-
-void callback_flag_info02(const msgs::Flag_Info::ConstPtr& input)
+void callback_flag_info02(const msgs::Flag_Info::ConstPtr &input)
 {
-    g_mode = input->Dspace_Flag08;
-    std::cout << "adv mode: " << g_mode << std::endl;
+  g_mode = input->Dspace_Flag08;
+  std::cout << "adv mode: " << g_mode << std::endl;
 }
 
-void callback_flag_info04(const msgs::Flag_Info::ConstPtr& input)
+void callback_flag_info04(const msgs::Flag_Info::ConstPtr &input)
 {
-    g_vs.acc_speed = input->Dspace_Flag01;
-    g_vs.steering_wheel = input->Dspace_Flag04;
-    g_vs.accelerator = input->Dspace_Flag05;
-    g_vs.brake_pos = input->Dspace_Flag02;//ART 
-    g_vs.rotating_speed = input->Dspace_Flag07;
-    std::cout << "steering_wheel " << g_vs.steering_wheel << std::endl;
+  g_vs.acc_speed = input->Dspace_Flag01;
+  g_vs.steering_wheel = input->Dspace_Flag04;
+  g_vs.accelerator = input->Dspace_Flag05;
+  g_vs.brake_pos = input->Dspace_Flag02; // ART
+  g_vs.rotating_speed = input->Dspace_Flag07;
+  std::cout << "steering_wheel " << g_vs.steering_wheel << std::endl;
 }
 
-
-void callback_detObj(const msgs::DetectedObjectArray& input)
+void callback_detObj(const msgs::DetectedObjectArray &input)
 {
   g_mutex_ros.lock();
   g_det_obj_array = input;
   g_mutex_ros.unlock();
 }
 
-void callback_gps(const msgs::LidLLA& input)
+void callback_gps(const msgs::LidLLA &input)
 {
   std::cout << "callback gps " << std::endl;
   g_mutex_ros.lock();
@@ -334,14 +331,14 @@ void callback_gps(const msgs::LidLLA& input)
   g_mutex_ros.unlock();
 }
 
-void callback_veh(const msgs::VehInfo& input)
+void callback_veh(const msgs::VehInfo &input)
 {
   g_mutex_ros.lock();
   g_veh_info = input;
   g_mutex_ros.unlock();
 }
 
-void callback_gnss2local(const geometry_msgs::PoseStamped::ConstPtr& input)
+void callback_gnss2local(const geometry_msgs::PoseStamped::ConstPtr &input)
 {
   g_mutex_ros.lock();
   tf::Quaternion gnss_q(input->pose.orientation.x, input->pose.orientation.y, input->pose.orientation.z,
@@ -354,7 +351,7 @@ void callback_gnss2local(const geometry_msgs::PoseStamped::ConstPtr& input)
   g_mutex_ros.unlock();
 }
 
-void callback_fps(const std_msgs::String::ConstPtr& input)
+void callback_fps(const std_msgs::String::ConstPtr &input)
 {
   g_mutex_ros.lock();
   std::string json_string = input->data.c_str();
@@ -362,29 +359,32 @@ void callback_fps(const std_msgs::String::ConstPtr& input)
   {
     g_fps_json = json::parse(json_string);
   }
-  catch (std::exception& e)
+  catch (std::exception &e)
   {
     std::cout << "callback_fps message: " << e.what() << std::endl;
     return;
   }
   g_mutex_ros.unlock();
 }
-void callback_currentPose(const geometry_msgs::PoseStamped::ConstPtr& input) {
+void callback_currentPose(const geometry_msgs::PoseStamped::ConstPtr &input)
+{
   g_mutex_ros.lock();
   current_pose.x = input->pose.position.x;
   current_pose.y = input->pose.position.y;
   current_pose.z = input->pose.position.z;
   g_mutex_ros.unlock();
 }
-void callback_speedCmd(const std_msgs::Float64::ConstPtr& input) {
-    speed_cmd = input->data;
+void callback_speedCmd(const std_msgs::Float64::ConstPtr &input)
+{
+  speed_cmd = input->data;
 }
-void lidarlla_heading_Callback(const std_msgs::Float64::ConstPtr& heading){
+void lidarlla_heading_Callback(const std_msgs::Float64::ConstPtr &heading)
+{
   lidarlla_heading = heading->data;
 }
-void callbackBusStopInfo(const msgs::Flag_Info::ConstPtr& input)
+void callbackBusStopInfo(const msgs::Flag_Info::ConstPtr &input)
 {
-  //std::cout << "<<<<<<<<<<<<<<<callbackBusStopInfo>>>>>>>>>>>>>>>" << std::endl;
+  // std::cout << "<<<<<<<<<<<<<<<callbackBusStopInfo>>>>>>>>>>>>>>>" << std::endl;
   g_board_list = "";
   float stop[8];
   memset(stop, 0, sizeof(stop));
@@ -404,7 +404,9 @@ void callbackBusStopInfo(const msgs::Flag_Info::ConstPtr& input)
     {
       stopids.push_back(i + g_route_id + 1);
       g_board_list += "1";
-    }else{
+    }
+    else
+    {
       g_board_list += "0";
     }
   }
@@ -438,16 +440,16 @@ void callbackBusStopInfo(const msgs::Flag_Info::ConstPtr& input)
   g_mutex_ros.unlock();
 }
 
-void callbackNextStop(const msgs::Flag_Info::ConstPtr& input)
+void callbackNextStop(const msgs::Flag_Info::ConstPtr &input)
 {
   g_mutex_ros.lock();
   g_cuttent_arrive_stop.id = g_route_id + (int)input->Dspace_Flag01;
   g_cuttent_arrive_stop.status = (int)input->Dspace_Flag02;
-  //cuttent_arrive_stop.round = (int) input->PX2_Flag01;
+  // cuttent_arrive_stop.round = (int) input->PX2_Flag01;
   g_mutex_ros.unlock();
 }
 
-void callbackMileage(const std_msgs::String::ConstPtr& input)
+void callbackMileage(const std_msgs::String::ConstPtr &input)
 {
   g_mutex_ros.lock();
   g_mile_json = input->data.c_str();
@@ -456,40 +458,40 @@ void callbackMileage(const std_msgs::String::ConstPtr& input)
   g_mutex_ros.unlock();
 }
 
-void callbackRound(const std_msgs::Int32::ConstPtr& input)
+void callbackRound(const std_msgs::Int32::ConstPtr &input)
 {
-  g_cuttent_arrive_stop.round = (int) input->data;
+  g_cuttent_arrive_stop.round = (int)input->data;
 }
 
-void callbackSysReady(const std_msgs::Bool::ConstPtr& input)
+void callbackSysReady(const std_msgs::Bool::ConstPtr &input)
 {
-    std::cout << "====================================" << input->data << std::endl;
-    g_sys_ready = (bool)input->data;
+  std::cout << "====================================" << input->data << std::endl;
+  g_sys_ready = (bool)input->data;
 }
 
 std::string get_msg_type(int id)
 {
   switch (id)
   {
-    /*
-            case 0x350:
-            {
-                return "M8.2.adv001";
-            }
-            break;
-    */
-    case 0x351:
-    {
-      return "M8.2.adv002";
-    }
+  /*
+          case 0x350:
+          {
+              return "M8.2.adv001";
+          }
+          break;
+  */
+  case 0x351:
+  {
+    return "M8.2.adv002";
+  }
+  break;
+  default:
     break;
-    default:
-      break;
   }
   return "";
 }
 
-void callbackIMU(const sensor_msgs::Imu::ConstPtr& input)
+void callbackIMU(const sensor_msgs::Imu::ConstPtr &input)
 {
   g_imu.Gx = input->linear_acceleration.x;
   g_imu.Gy = input->linear_acceleration.y;
@@ -499,55 +501,54 @@ void callbackIMU(const sensor_msgs::Imu::ConstPtr& input)
   g_imu.Gyroz = input->angular_velocity.z;
 }
 
-void callbackBI(const msgs::BackendInfo::ConstPtr& input)
+void callbackBI(const msgs::BackendInfo::ConstPtr &input)
 {
-  g_vs.motor_temperature = input->motor_temperature; //馬達溫度
-  g_vs.tire_pressure = input->tire_pressure; //胎壓
-  g_vs.air_pressure = input->air_pressure; //氣壓
-  g_vs.battery =  input->battery; //電量 %
-  g_vs.steer = input->steer; //轉向
-  g_vs.localization = input->localization; //定位
-  g_vs.odometry = input->odometry; //里程
-  g_vs.speed = input->speed; //車速 km/hr
-  //vs.rotating_speed = input->speed ; //轉速
-  g_vs.bus_stop = input->bus_stop; //站點
-  g_vs.vehicle_number = input->vehicle_number; //車號
-  g_vs.gear = input->gear; //檔位
-  g_vs.hand_brake = input->hand_brake; //手煞車
-  //vs.steering_wheel = input->steering_wheel; //方向盤
-  g_vs.door = input->door; //車門
-  g_vs.air_conditioner = input->air_conditioner; //空調
-  g_vs.radar = input->radar; //radar
+  g_vs.motor_temperature = input->motor_temperature; // 馬達溫度
+  g_vs.tire_pressure = input->tire_pressure;         // 胎壓
+  g_vs.air_pressure = input->air_pressure;           // 氣壓
+  g_vs.battery = input->battery;                     // 電量 %
+  g_vs.steer = input->steer;                         // 轉向
+  g_vs.localization = input->localization;           // 定位
+  g_vs.odometry = input->odometry;                   // 里程
+  g_vs.speed = input->speed;                         // 車速 km/hr
+  // vs.rotating_speed = input->speed ; //轉速
+  g_vs.bus_stop = input->bus_stop;             // 站點
+  g_vs.vehicle_number = input->vehicle_number; // 車號
+  g_vs.gear = input->gear;                     // 檔位
+  g_vs.hand_brake = input->hand_brake;         // 手煞車
+  // vs.steering_wheel = input->steering_wheel; //方向盤
+  g_vs.door = input->door;                       // 車門
+  g_vs.air_conditioner = input->air_conditioner; // 空調
+  g_vs.radar = input->radar;                     // radar
   g_vs.lidar = input->lidar;
   g_vs.camera = input->camera;
   g_vs.GPS = input->GPS;
-  g_vs.headlight = input->headlight; //大燈 0關1開
-  g_vs.wiper = input->wiper; //雨刷 0關 1開
-  g_vs.indoor_light = input->indoor_light; //車內燈 0關 1開
-  g_vs.gross_power = input->gross_power; //總電源 0關 1開
-  g_vs.left_turn_light = input->left_turn_light; //左方向燈 0關 1開
-  g_vs.right_turn_light = input->right_turn_light;//右方向燈 0關 1開
-  g_vs.estop = input->estop; //E-Stop 0關 1開
-  g_vs.ACC_state = input->ACC_state; //ACC電源狀態 0關 1開
-  g_vs.time = input->time; //標準時間
-  g_vs.driving_time = input->driving_time; //行駛時間
-  g_vs.mileage = input->mileage; //行駛距離
-  g_battery.gross_voltage = input->gross_voltage; //總電壓 V
-  g_battery.gross_current = input->gross_current; //總電流 A
-  g_battery.highest_voltage = input->highest_voltage; //最高電池電壓 0.01V
-  g_battery.highest_number = input->highest_number; //最高電壓電池位置 電池編號
-  g_battery.lowest_volage = input->lowest_volage; //最低電池電壓 0.01V
-  g_battery.lowest_number = input->lowest_number; //最低電壓電池位置 電池編號
-  g_battery.voltage_deviation = input->voltage_deviation; //高低電壓差 0.01V
-  g_battery.highest_temp_location = input->highest_temp_location; //電池最高環境溫度位置 區域編號
-  g_battery.highest_temperature = input->highest_temperature; //電池最高環境溫度
-  //g_mode = input->mode; //模式 自動/半自動/手動/鎖定
-  g_emergency_exit = input->emergency_exit; //緊急出口
-  g_delta_mileage = input->mileage; //儀錶板上的里程來自PLC
+  g_vs.headlight = input->headlight;                              // 大燈 0關1開
+  g_vs.wiper = input->wiper;                                      // 雨刷 0關 1開
+  g_vs.indoor_light = input->indoor_light;                        // 車內燈 0關 1開
+  g_vs.gross_power = input->gross_power;                          // 總電源 0關 1開
+  g_vs.left_turn_light = input->left_turn_light;                  // 左方向燈 0關 1開
+  g_vs.right_turn_light = input->right_turn_light;                // 右方向燈 0關 1開
+  g_vs.estop = input->estop;                                      // E-Stop 0關 1開
+  g_vs.ACC_state = input->ACC_state;                              // ACC電源狀態 0關 1開
+  g_vs.time = input->time;                                        // 標準時間
+  g_vs.driving_time = input->driving_time;                        // 行駛時間
+  g_vs.mileage = input->mileage;                                  // 行駛距離
+  g_battery.gross_voltage = input->gross_voltage;                 // 總電壓 V
+  g_battery.gross_current = input->gross_current;                 // 總電流 A
+  g_battery.highest_voltage = input->highest_voltage;             // 最高電池電壓 0.01V
+  g_battery.highest_number = input->highest_number;               // 最高電壓電池位置 電池編號
+  g_battery.lowest_volage = input->lowest_volage;                 // 最低電池電壓 0.01V
+  g_battery.lowest_number = input->lowest_number;                 // 最低電壓電池位置 電池編號
+  g_battery.voltage_deviation = input->voltage_deviation;         // 高低電壓差 0.01V
+  g_battery.highest_temp_location = input->highest_temp_location; // 電池最高環境溫度位置 區域編號
+  g_battery.highest_temperature = input->highest_temperature;     // 電池最高環境溫度
+  // g_mode = input->mode; //模式 自動/半自動/手動/鎖定
+  g_emergency_exit = input->emergency_exit; // 緊急出口
+  g_delta_mileage = input->mileage;         // 儀錶板上的里程來自PLC
 }
 
-
-void callbackSersorStatus(const std_msgs::String::ConstPtr& input)
+void callbackSersorStatus(const std_msgs::String::ConstPtr &input)
 {
   using namespace std;
   g_mutex_sensor.lock();
@@ -557,25 +558,25 @@ void callbackSersorStatus(const std_msgs::String::ConstPtr& input)
   g_mutex_sensor.unlock();
 }
 
-void callbackTracking(const msgs::DetectedObjectArray& input)
+void callbackTracking(const msgs::DetectedObjectArray &input)
 {
   g_mutex_do.lock();
   g_tracking_obj_array = input;
   g_mutex_do.unlock();
 }
 
-void callbackFailSafe(const std_msgs::String::ConstPtr& input)
+void callbackFailSafe(const std_msgs::String::ConstPtr &input)
 {
   json J1 = json::parse(input->data.c_str());
   g_mutex_fail_safe.lock();
-  g_mqtt_fail_safe_queue.push(J1.dump()); 
+  g_mqtt_fail_safe_queue.push(J1.dump());
   g_mutex_fail_safe.unlock();
 }
 
 /*========================= ROS callbacks end =========================*/
 
 /*========================= json parsers begin =========================*/
-std::string get_jsonmsg_can(const std::string& type, double* data)
+std::string get_jsonmsg_can(const std::string &type, double *data)
 {
   // std::string time_string = log_Time ();
   json j1;
@@ -593,7 +594,7 @@ std::string get_jsonmsg_can(const std::string& type, double* data)
   return j1.dump();
 }
 
-std::string get_jsonmsg_ros(const std::string& type)
+std::string get_jsonmsg_ros(const std::string &type)
 {
   json j1;
   j1["type"] = type;
@@ -657,7 +658,7 @@ std::string get_jsonmsg_ros(const std::string& type)
   return j1.dump();
 }
 
-std::string get_jsonmsg_to_obu(const std::string& type)
+std::string get_jsonmsg_to_obu(const std::string &type)
 {
   json j1;
   if (type == "M8.2.adv009")
@@ -666,7 +667,7 @@ std::string get_jsonmsg_to_obu(const std::string& type)
     j1["lat"] = std::to_string(g_gps.lidar_Lat);
     j1["lon"] = std::to_string(g_gps.lidar_Lon);
     j1["speed"] = std::to_string(g_vs.acc_speed);
-    //j1["bearing"] = std::to_string(g_current_gnss_pose.yaw * 180 / PI);
+    // j1["bearing"] = std::to_string(g_current_gnss_pose.yaw * 180 / PI);
     j1["bearing"] = std::to_string(lidarlla_heading);
     j1["brake"] = std::to_string(g_vs.brake_pos);
     j1["steering"] = std::to_string(g_vs.steering_wheel);
@@ -678,117 +679,119 @@ std::string get_jsonmsg_to_obu(const std::string& type)
   return j1.dump();
 }
 
-std::string get_jsonmsg_to_vk_server(const std::string& type)
+std::string get_jsonmsg_to_vk_server(const std::string &type)
 {
   json j1;
   j1["type"] = type;
-  j1["deviceid"] = g_plate; //PLATE;
+  j1["deviceid"] = g_plate; // PLATE;
   j1["receivetime"] = log_Time();
   if (type == "M8.2.VK001")
   {
-    j1["motor"] = g_vs.motor_temperature; // 馬達溫度 //2.1;
-    j1["tirepressure"] =  g_vs.tire_pressure; //胎壓 //0.0;
-    j1["airpressure"] = g_vs.air_pressure; //氣壓 //0.0;
-    j1["electricity"] = g_vs.battery; //電量//0.0;
-    j1["steering"] = g_vs.steer; // 轉向 
-    //j1["bearing"] = g_current_gnss_pose.yaw * 180 / PI;
+    j1["motor"] = g_vs.motor_temperature;    // 馬達溫度 //2.1;
+    j1["tirepressure"] = g_vs.tire_pressure; // 胎壓 //0.0;
+    j1["airpressure"] = g_vs.air_pressure;   // 氣壓 //0.0;
+    j1["electricity"] = g_vs.battery;        // 電量//0.0;
+    j1["steering"] = g_vs.steer;             // 轉向
+    // j1["bearing"] = g_current_gnss_pose.yaw * 180 / PI;
     j1["bearing"] = lidarlla_heading;
-    //j1["heading"] = g_current_gnss_pose.yaw * 180 / PI;;
+    // j1["heading"] = g_current_gnss_pose.yaw * 180 / PI;;
     j1["heading"] = lidarlla_heading;
-    j1["milage"] =  g_vs.odometry; //行駛距離//0.0;
-    j1["speed"] = g_vs.speed; //vs.speed 車速 目前來源PLC
-    j1["rotate"] = g_vs.rotating_speed; //轉速 //0.0;
-    j1["gear"] = g_vs.gear; //檔位 //1;
-    j1["handcuffs"] = convertBoolean(g_vs.hand_brake); //手煞車 //true;
-    j1["Steeringwheel"] = g_vs.steering_wheel; //方向盤 //0.0;
-    j1["door"] = convertBoolean(g_vs.door); //車門 //true;
-    j1["airconditioner"] = convertBoolean(g_vs.air_conditioner); //空調;
-    j1["lat"] = g_current_gnss_pose.x; //vs.location 目前來源 gnss
-    j1["lng"] = g_current_gnss_pose.y; //vs.location 目前來源 gnss
-    j1["headlight"] = convertBoolean(g_vs.headlight); //車燈 //true;
-    j1["wiper"] =  convertBoolean(g_vs.wiper); //雨刷//true;
-    j1["Interiorlight"] = convertBoolean(g_vs.indoor_light); //車內燈//true;
-    j1["mainswitch"] = convertBoolean(g_vs.gross_power); //總電源//true;
-    j1["leftlight"] = convertBoolean(g_vs.left_turn_light); //左方向燈; //true
-    j1["rightlight"] = convertBoolean(g_vs.right_turn_light); //右方向燈//true;
-    j1["EStop"] = convertBoolean(g_vs.estop); // E-Stop//true;
-    j1["ACCpower"] = convertBoolean(g_vs.ACC_state); //ACC 電源//true;
-    j1["ArrivedStop"] = g_cuttent_arrive_stop.id; //目前來源 NextStop/Info
-    j1["ArrivedStopStatus"] = g_cuttent_arrive_stop.status; // 目前來源NextStop/Info
-    j1["round"] = g_cuttent_arrive_stop.round; //目前來源 BusStop/Round
-    j1["route_id"] = g_route_id;  //預設2000
+    j1["milage"] = g_vs.odometry;                                // 行駛距離//0.0;
+    j1["speed"] = g_vs.speed;                                    // vs.speed 車速 目前來源PLC
+    j1["rotate"] = g_vs.rotating_speed;                          // 轉速 //0.0;
+    j1["gear"] = g_vs.gear;                                      // 檔位 //1;
+    j1["handcuffs"] = convertBoolean(g_vs.hand_brake);           // 手煞車 //true;
+    j1["Steeringwheel"] = g_vs.steering_wheel;                   // 方向盤 //0.0;
+    j1["door"] = convertBoolean(g_vs.door);                      // 車門 //true;
+    j1["airconditioner"] = convertBoolean(g_vs.air_conditioner); // 空調;
+    j1["lat"] = g_current_gnss_pose.x;                           // vs.location 目前來源 gnss
+    j1["lng"] = g_current_gnss_pose.y;                           // vs.location 目前來源 gnss
+    j1["headlight"] = convertBoolean(g_vs.headlight);            // 車燈 //true;
+    j1["wiper"] = convertBoolean(g_vs.wiper);                    // 雨刷//true;
+    j1["Interiorlight"] = convertBoolean(g_vs.indoor_light);     // 車內燈//true;
+    j1["mainswitch"] = convertBoolean(g_vs.gross_power);         // 總電源//true;
+    j1["leftlight"] = convertBoolean(g_vs.left_turn_light);      // 左方向燈; //true
+    j1["rightlight"] = convertBoolean(g_vs.right_turn_light);    // 右方向燈//true;
+    j1["EStop"] = convertBoolean(g_vs.estop);                    // E-Stop//true;
+    j1["ACCpower"] = convertBoolean(g_vs.ACC_state);             // ACC 電源//true;
+    j1["ArrivedStop"] = g_cuttent_arrive_stop.id;                // 目前來源 NextStop/Info
+    j1["ArrivedStopStatus"] = g_cuttent_arrive_stop.status;      // 目前來源NextStop/Info
+    j1["round"] = g_cuttent_arrive_stop.round;                   // 目前來源 BusStop/Round
+    j1["route_id"] = g_route_id;                                 // 預設2000
     j1["RouteMode"] = 2;
-    j1["Gx"] = g_imu.Gx;   //   目前來源 imu_data_rad
-    j1["Gy"] = g_imu.Gy;   //   目前來源 imu_data_rad
-    j1["Gz"] = g_imu.Gz;   //   目前來源 imu_data_rad
-    j1["Gyrox"] = g_imu.Gyrox; // 目前來源 imu_data_rad
-    j1["Gyroy"] = g_imu.Gyroy; // 目前來源 imu_data_rad
-    j1["Gyroz"] = g_imu.Gyroz; // 目前來源 imu_data_rad
-    j1["accelerator"] = g_vs.accelerator; //無rostopic 目前來源Flag04
-    j1["brake_pedal"] = g_vs.brake_pos; //無rostopic 目前來源Flag04
-    j1["distance"] = 0.0; //? 跟mileage有何不同？
-    j1["mainvoltage"] = g_battery.gross_voltage; //總電壓//0.0;
-    j1["maxvoltage"] = g_battery.highest_voltage; //最高電池電壓//0.0;
-    j1["maxvbatteryposition"] =  g_battery.highest_number; //最高電壓電池編號//"5517XW";
-    j1["minvoltage"] = g_battery.lowest_volage; //最低電池電壓//0.0;
-    j1["pressurediff"] = g_battery.voltage_deviation; //高低電壓差//0.0;
-    j1["maxtbatteryposition"] = g_battery.lowest_number; //最低電池電壓 0.01V"454FG"; 
-    j1["maxtemperature"] = g_battery.highest_temperature; //電池最高環境溫度//0.0;
-    j1["Signal"] = g_current_spat; //無資料
-    j1["CMS"] = 1; //無資料
-    j1["setting"] = g_mode; // 自動/半自動/手動/鎖定
+    j1["Gx"] = g_imu.Gx;                                  //   目前來源 imu_data_rad
+    j1["Gy"] = g_imu.Gy;                                  //   目前來源 imu_data_rad
+    j1["Gz"] = g_imu.Gz;                                  //   目前來源 imu_data_rad
+    j1["Gyrox"] = g_imu.Gyrox;                            // 目前來源 imu_data_rad
+    j1["Gyroy"] = g_imu.Gyroy;                            // 目前來源 imu_data_rad
+    j1["Gyroz"] = g_imu.Gyroz;                            // 目前來源 imu_data_rad
+    j1["accelerator"] = g_vs.accelerator;                 // 無rostopic 目前來源Flag04
+    j1["brake_pedal"] = g_vs.brake_pos;                   // 無rostopic 目前來源Flag04
+    j1["distance"] = 0.0;                                 //? 跟mileage有何不同？
+    j1["mainvoltage"] = g_battery.gross_voltage;          // 總電壓//0.0;
+    j1["maxvoltage"] = g_battery.highest_voltage;         // 最高電池電壓//0.0;
+    j1["maxvbatteryposition"] = g_battery.highest_number; // 最高電壓電池編號//"5517XW";
+    j1["minvoltage"] = g_battery.lowest_volage;           // 最低電池電壓//0.0;
+    j1["pressurediff"] = g_battery.voltage_deviation;     // 高低電壓差//0.0;
+    j1["maxtbatteryposition"] = g_battery.lowest_number;  // 最低電池電壓 0.01V"454FG";
+    j1["maxtemperature"] = g_battery.highest_temperature; // 電池最高環境溫度//0.0;
+    j1["Signal"] = g_current_spat;                        // 無資料
+    j1["CMS"] = 1;                                        // 無資料
+    j1["setting"] = g_mode;                               // 自動/半自動/手動/鎖定
     j1["board_list"] = g_board_list;
     j1["sys_ready"] = g_sys_ready;
   }
   else if (type == "M8.2.VK002")
   {
-    j1["motor"] = g_vs.motor_temperature; // 馬達溫度 //2.1;
-    j1["tirepressure"] = g_vs.tire_pressure; //胎壓 //0.0;
-    j1["airpressure"] = g_vs.air_pressure; //氣壓 //0.0;
-    j1["electricity"] =  g_vs.battery; //電量//0.0;
-    j1["steering"] = g_vs.steer; // 轉向 
-    //j1["bearing"] = g_current_gnss_pose.yaw * 180 / PI;
+    j1["motor"] = g_vs.motor_temperature;    // 馬達溫度 //2.1;
+    j1["tirepressure"] = g_vs.tire_pressure; // 胎壓 //0.0;
+    j1["airpressure"] = g_vs.air_pressure;   // 氣壓 //0.0;
+    j1["electricity"] = g_vs.battery;        // 電量//0.0;
+    j1["steering"] = g_vs.steer;             // 轉向
+    // j1["bearing"] = g_current_gnss_pose.yaw * 180 / PI;
     j1["bearing"] = lidarlla_heading;
-    //j1["heading"] = g_current_gnss_pose.yaw * 180 / PI;;
+    // j1["heading"] = g_current_gnss_pose.yaw * 180 / PI;;
     j1["heading"] = lidarlla_heading;
-    j1["milage"] = g_vs.odometry; //行駛距離//0.0;
-    j1["speed"] = g_vs.speed; //vs.speed 車速 
-    j1["rotate"] = g_vs.rotating_speed; //轉速 //0.0;
-    j1["gear"] = g_vs.gear; //檔位 //1;
-    j1["handcuffs"] = convertBoolean(g_vs.hand_brake); //手煞車 //true;
-    j1["Steeringwheel"] = g_vs.steering_wheel; //方向盤 //0.0;
-    j1["door"] = convertBoolean(g_vs.door); //車門 //true;
-    j1["airconditioner"] = convertBoolean(g_vs.air_conditioner); //空調;
-    j1["lat"] = g_current_gnss_pose.x;  //vs.location 目前來源 gnss
-    j1["lng"] = g_current_gnss_pose.y;  //vs.location 目前來源 gnss
-    j1["headlight"] = convertBoolean(g_vs.headlight); //車燈 //true;
-    j1["wiper"] = convertBoolean(g_vs.wiper); //雨刷//true;
-    j1["Interiorlight"] = convertBoolean(g_vs.indoor_light); //車內燈//true;
-    j1["mainswitch"] = convertBoolean(g_vs.gross_power); //總電源//true;
-    j1["leftlight"] = convertBoolean(g_vs.left_turn_light); //左方向燈; //true
-    j1["rightlight"] = convertBoolean(g_vs.right_turn_light); //右方向燈//true;
-    j1["EStop"] = convertBoolean(g_vs.estop); // E-Stop//true;
-    j1["ACCpower"] = convertBoolean(g_vs.ACC_state); //ACC 電源//true;
-    j1["route_id"] = g_route_id; //default 2000
+    j1["milage"] = g_vs.odometry;                                // 行駛距離//0.0;
+    j1["speed"] = g_vs.speed;                                    // vs.speed 車速
+    j1["rotate"] = g_vs.rotating_speed;                          // 轉速 //0.0;
+    j1["gear"] = g_vs.gear;                                      // 檔位 //1;
+    j1["handcuffs"] = convertBoolean(g_vs.hand_brake);           // 手煞車 //true;
+    j1["Steeringwheel"] = g_vs.steering_wheel;                   // 方向盤 //0.0;
+    j1["door"] = convertBoolean(g_vs.door);                      // 車門 //true;
+    j1["airconditioner"] = convertBoolean(g_vs.air_conditioner); // 空調;
+    j1["lat"] = g_current_gnss_pose.x;                           // vs.location 目前來源 gnss
+    j1["lng"] = g_current_gnss_pose.y;                           // vs.location 目前來源 gnss
+    j1["headlight"] = convertBoolean(g_vs.headlight);            // 車燈 //true;
+    j1["wiper"] = convertBoolean(g_vs.wiper);                    // 雨刷//true;
+    j1["Interiorlight"] = convertBoolean(g_vs.indoor_light);     // 車內燈//true;
+    j1["mainswitch"] = convertBoolean(g_vs.gross_power);         // 總電源//true;
+    j1["leftlight"] = convertBoolean(g_vs.left_turn_light);      // 左方向燈; //true
+    j1["rightlight"] = convertBoolean(g_vs.right_turn_light);    // 右方向燈//true;
+    j1["EStop"] = convertBoolean(g_vs.estop);                    // E-Stop//true;
+    j1["ACCpower"] = convertBoolean(g_vs.ACC_state);             // ACC 電源//true;
+    j1["route_id"] = g_route_id;                                 // default 2000
     j1["RouteMode"] = 2;
-    j1["Gx"] = g_imu.Gx; //   目前來源 imu_data_rad
-    j1["Gy"] = g_imu.Gy; //   目前來源 imu_data_rad
-    j1["Gz"] = g_imu.Gz; //   目前來源 imu_data_rad
-    j1["Gyrox"] = g_imu.Gyrox; //   目前來源 imu_data_rad
-    j1["Gyroy"] = g_imu.Gyroy; //   目前來源 imu_data_rad
-    j1["Gyroz"] = g_imu.Gyroz; //   目前來源 imu_data_rad
-    j1["accelerator"] = g_vs.accelerator; //無rostopic 目前來源Flag04
-    j1["brake_pedal"] = g_vs.brake_pos; //無rostopic 目前來源Flag04
-    j1["ArrivedStop"] = g_cuttent_arrive_stop.id; //目前來源 NextStop/Info
-    j1["ArrivedStopStatus"] = g_cuttent_arrive_stop.status; //目前來源 NextStop/Info
-    j1["round"] = g_cuttent_arrive_stop.round; //目前來源 BusStop/Round
-    j1["Signal"] = g_current_spat; //無資料
-    j1["CMS"] = 1; //無資料
-    j1["setting"] = g_mode; 
-    j1["EExit"] = g_emergency_exit; 
+    j1["Gx"] = g_imu.Gx;                                    //   目前來源 imu_data_rad
+    j1["Gy"] = g_imu.Gy;                                    //   目前來源 imu_data_rad
+    j1["Gz"] = g_imu.Gz;                                    //   目前來源 imu_data_rad
+    j1["Gyrox"] = g_imu.Gyrox;                              //   目前來源 imu_data_rad
+    j1["Gyroy"] = g_imu.Gyroy;                              //   目前來源 imu_data_rad
+    j1["Gyroz"] = g_imu.Gyroz;                              //   目前來源 imu_data_rad
+    j1["accelerator"] = g_vs.accelerator;                   // 無rostopic 目前來源Flag04
+    j1["brake_pedal"] = g_vs.brake_pos;                     // 無rostopic 目前來源Flag04
+    j1["ArrivedStop"] = g_cuttent_arrive_stop.id;           // 目前來源 NextStop/Info
+    j1["ArrivedStopStatus"] = g_cuttent_arrive_stop.status; // 目前來源 NextStop/Info
+    j1["round"] = g_cuttent_arrive_stop.round;              // 目前來源 BusStop/Round
+    j1["Signal"] = g_current_spat;                          // 無資料
+    j1["CMS"] = 1;                                          // 無資料
+    j1["setting"] = g_mode;
+    j1["EExit"] = g_emergency_exit;
     j1["board_list"] = g_board_list;
     j1["sys_ready"] = g_sys_ready;
-  }else if (type == "M8.2.VK003"){
+  }
+  else if (type == "M8.2.VK003")
+  {
     j1["lat"] = g_gps.lidar_Lat;
     j1["lng"] = g_gps.lidar_Lon;
     json J0 = json::parse(g_event_json);
@@ -796,7 +799,8 @@ std::string get_jsonmsg_to_vk_server(const std::string& type)
     j1["status"] = J0.at("status");
     j1["event_str"] = J0.at("event_str");
     j1["timestamp"] = J0.at("timestamp");
-  }else if (type == "M8.2.VK004")
+  }
+  else if (type == "M8.2.VK004")
   {
     for (int i = 0; i < FPS_KEY_LEN; i++)
     {
@@ -812,13 +816,12 @@ std::string get_jsonmsg_to_vk_server(const std::string& type)
     {
       json j0 = json::parse(g_mile_json);
       j1["mileage_info"] = j0;
-
     }
-    catch (std::exception& e)
+    catch (std::exception &e)
     {
-      //std::cout << "mileage: " << e.what() << std::endl;
+      // std::cout << "mileage: " << e.what() << std::endl;
     }
-    
+
     g_mile_json = "";
     // Roger 20200212 ]
   }
@@ -828,43 +831,47 @@ std::string get_jsonmsg_to_vk_server(const std::string& type)
 
 /*========================= thread runnables begin =========================*/
 
-void backendStateChecker(int argc, char** argv)
+void backendStateChecker(int argc, char **argv)
 {
-    while (true)
+  while (true)
+  {
+    RosModuleTraffic::pubBackendState(g_backend_state_001 & g_backend_state_006);
+    boost::this_thread::sleep(boost::posix_time::microseconds(SEND_CHECK_MICROSECONDS));
+  }
+}
+
+void occChecker(int argc, char **argv)
+{
+  while (true)
+  {
+    RosModuleTraffic::pubOCCState(g_occ_state);
+    boost::this_thread::sleep(boost::posix_time::microseconds(SEND_CHECK_MICROSECONDS));
+  }
+}
+
+void mqtt_pubish(const std::string &msg)
+{
+  if (g_is_mqtt_connected)
+  {
+    std::string topic = "vehicle/report/" + g_vid;
+    std::cout << "publish " << msg << std::endl;
+    int rc = g_mqtt_client.publish(topic, msg);
+    if (rc == 0)
     {
-        RosModuleTraffic::pubBackendState(g_backend_state_001 & g_backend_state_006);
-        boost::this_thread::sleep(boost::posix_time::microseconds(SEND_CHECK_MICROSECONDS));
+      g_occ_state = true;
     }
-}
-
-void occChecker(int argc, char** argv)
-{
-    while (true)
+    else
     {
-        RosModuleTraffic::pubOCCState(g_occ_state);
-        boost::this_thread::sleep(boost::posix_time::microseconds(SEND_CHECK_MICROSECONDS));
+      g_occ_state = false;
     }
-
+  }
+  else
+  {
+    g_occ_state = false;
+  }
 }
 
-
-void mqtt_pubish( const std::string& msg)
-{
-    if(g_is_mqtt_connected){
-        std::string topic = "vehicle/report/" + g_vid;
-        std::cout << "publish "  << msg << std::endl;
-        int rc = g_mqtt_client.publish(topic, msg);
-        if(rc == 0){ 
-            g_occ_state = true;
-        }else{
-             g_occ_state = false;
-        }
-    }else{
-     g_occ_state = false;
-    }
-}
-
-void sendRun(int argc, char** argv)
+void sendRun(int argc, char **argv)
 {
   using namespace std;
   UdpClient udp_back_client;
@@ -905,22 +912,27 @@ void sendRun(int argc, char** argv)
 
     while (!g_vk_queue.empty())
     {
-      if(udp_vk_client.send_obj_to_server(g_vk_queue.front(), g_flag_show_udp_send) != -1){
-          g_backend_state_006 = true;
-      }else{
-          g_backend_state_006 = false;
+      if (udp_vk_client.send_obj_to_server(g_vk_queue.front(), g_flag_show_udp_send) != -1)
+      {
+        g_backend_state_006 = true;
       }
-      //UDP_TABLET_client.send_obj_to_server(vkQueue.front(), flag_show_udp_send);
+      else
+      {
+        g_backend_state_006 = false;
+      }
+      // UDP_TABLET_client.send_obj_to_server(vkQueue.front(), flag_show_udp_send);
       g_vk_queue.pop();
     }
-    
+
     while (!g_vk_status_queue.empty())
     {
-      if(udp_vk_client.send_obj_to_server(g_vk_status_queue.front(), true) != -1)
+      if (udp_vk_client.send_obj_to_server(g_vk_status_queue.front(), true) != -1)
       {
-          g_backend_state_001 = true;
-      }else{
-          g_backend_state_001 = false;
+        g_backend_state_001 = true;
+      }
+      else
+      {
+        g_backend_state_001 = false;
       }
       udp_vk_fg_client.send_obj_to_server(g_vk_status_queue.front(), true);
       udp_tablet_client.send_obj_to_server(g_vk_status_queue.front(), g_flag_show_udp_send);
@@ -932,20 +944,20 @@ void sendRun(int argc, char** argv)
     json j1;
     std::string states;
     json detectObject;
-    //std::string vid = "dc5360f91e74";
+    // std::string vid = "dc5360f91e74";
     j1["vid"] = g_vid;
     json gnss_list = json::array();
     json bsm_list = json::array();
     json ecu_list = json::array();
     json imu_list = json::array();
-    if(!g_mqtt_gnss_queue.empty())
+    if (!g_mqtt_gnss_queue.empty())
     {
-      while(!g_mqtt_gnss_queue.empty())
+      while (!g_mqtt_gnss_queue.empty())
       {
         json gnss = g_mqtt_gnss_queue.front();
         double lat = gnss["coord"][0];
         double lon = gnss["coord"][1];
-        if(lat == 0 || lon == 0)
+        if (lat == 0 || lon == 0)
         {
           g_mqtt_gnss_queue.pop();
           continue;
@@ -956,9 +968,10 @@ void sendRun(int argc, char** argv)
       j1["gnss"] = gnss_list;
     }
 
-    if(!g_mqtt_bsm_queue.empty())
+    if (!g_mqtt_bsm_queue.empty())
     {
-      while(!g_mqtt_bsm_queue.empty()){
+      while (!g_mqtt_bsm_queue.empty())
+      {
         json bsm = g_mqtt_bsm_queue.front();
         bsm_list.push_back(bsm);
         g_mqtt_bsm_queue.pop();
@@ -966,9 +979,10 @@ void sendRun(int argc, char** argv)
       j1["bms"] = bsm_list;
     }
 
-    if(!g_mqtt_ecu_queue.empty())
+    if (!g_mqtt_ecu_queue.empty())
     {
-      while(!g_mqtt_ecu_queue.empty()){
+      while (!g_mqtt_ecu_queue.empty())
+      {
         json ecu = g_mqtt_ecu_queue.front();
         ecu_list.push_back(ecu);
         g_mqtt_ecu_queue.pop();
@@ -976,9 +990,10 @@ void sendRun(int argc, char** argv)
       j1["ecu"] = ecu_list;
     }
 
-    if(!g_mqtt_imu_queue.empty())
+    if (!g_mqtt_imu_queue.empty())
     {
-      while(!g_mqtt_imu_queue.empty()){
+      while (!g_mqtt_imu_queue.empty())
+      {
         json jimu = g_mqtt_imu_queue.front();
         imu_list.push_back(jimu);
         g_mqtt_imu_queue.pop();
@@ -986,50 +1001,52 @@ void sendRun(int argc, char** argv)
       j1["imu"] = imu_list;
     }
 
-    while(!g_mqtt_sensor_queue.empty()){
-       g_mutex_sensor.lock();
-       states = g_mqtt_sensor_queue.front();
-       g_mqtt_sensor_queue.pop();
-       g_mutex_sensor.unlock();
-       mqtt_pubish(states);
-       udp_vk_a_plus_sensor_client.send_obj_to_server(states, true);
-    }
-
-    while(!g_mqtt_detect_object_queue.empty()){
-        g_mutex_do.lock();
-        json json_detect_object;
-        detectObject = g_mqtt_detect_object_queue.front();
-        json_detect_object["vid"] = g_vid;
-        json_detect_object["DO"] = detectObject;
-        g_mqtt_detect_object_queue.pop();
-        g_mutex_do.unlock();
-        mqtt_pubish(json_detect_object.dump());
-        udp_vk_a_plus_obj_client.send_obj_to_server(states, true);
-    }
-
-    while(!g_mqtt_fail_safe_queue.empty())
+    while (!g_mqtt_sensor_queue.empty())
     {
-	    g_mutex_fail_safe.lock();
-        std::string fail_safe = g_mqtt_fail_safe_queue.front();
-        json j1 = json::parse(fail_safe);
-        j1["type"] = "M8.2.VK003.2";
-        j1["deviceid"] = g_plate;
-	    g_mqtt_fail_safe_queue.pop();
-	    g_mutex_fail_safe.unlock();
-        udp_vk_fail_safe_client.send_obj_to_server(j1.dump(), true);
+      g_mutex_sensor.lock();
+      states = g_mqtt_sensor_queue.front();
+      g_mqtt_sensor_queue.pop();
+      g_mutex_sensor.unlock();
+      mqtt_pubish(states);
+      udp_vk_a_plus_sensor_client.send_obj_to_server(states, true);
+    }
+
+    while (!g_mqtt_detect_object_queue.empty())
+    {
+      g_mutex_do.lock();
+      json json_detect_object;
+      detectObject = g_mqtt_detect_object_queue.front();
+      json_detect_object["vid"] = g_vid;
+      json_detect_object["DO"] = detectObject;
+      g_mqtt_detect_object_queue.pop();
+      g_mutex_do.unlock();
+      mqtt_pubish(json_detect_object.dump());
+      udp_vk_a_plus_obj_client.send_obj_to_server(states, true);
+    }
+
+    while (!g_mqtt_fail_safe_queue.empty())
+    {
+      g_mutex_fail_safe.lock();
+      std::string fail_safe = g_mqtt_fail_safe_queue.front();
+      json j1 = json::parse(fail_safe);
+      j1["type"] = "M8.2.VK003.2";
+      j1["deviceid"] = g_plate;
+      g_mqtt_fail_safe_queue.pop();
+      g_mutex_fail_safe.unlock();
+      udp_vk_fail_safe_client.send_obj_to_server(j1.dump(), true);
     }
 
     mqtt_pubish(j1.dump());
     udp_vk_a_plus_info_client.send_obj_to_server(j1.dump(), true);
     g_mutex_mqtt.unlock();
 
-
-    if(g_event_queue_switch)
+    if (g_event_queue_switch)
     {
-      if(!g_event_queue_1.empty()){
+      if (!g_event_queue_1.empty())
+      {
         g_mutex_event_1.lock();
         g_event_queue_switch = false;
-      
+
         while (!g_event_queue_1.empty())
         {
           json j = g_event_queue_1.front();
@@ -1041,17 +1058,18 @@ void sendRun(int argc, char** argv)
         }
 
         g_mutex_event_1.unlock();
-      }  
-    }//if(event_queue_switch)
+      }
+    } // if(event_queue_switch)
     else
     {
-      if(!g_event_queue_2.empty()){
+      if (!g_event_queue_2.empty())
+      {
         g_mutex_event_2.lock();
         g_event_queue_switch = true;
-    
+
         while (!g_event_queue_2.empty())
         {
-         
+
           json j = g_event_queue_2.front();
           string jstr = j.dump();
           cout << "+++++++++++++++++++++++++++++++send from q 2 " << jstr << endl;
@@ -1061,15 +1079,15 @@ void sendRun(int argc, char** argv)
         }
 
         g_mutex_event_2.unlock();
-      }//if(eventQueue2.size() != 0)
-    }//else
-    //cout << " receive event: " << event_recv_count << endl;
-    //cout << " send event: " << event_send_count << endl;
-    boost::this_thread::sleep(boost::posix_time::microseconds(100*1000));
+      } // if(eventQueue2.size() != 0)
+    }   // else
+    // cout << " receive event: " << event_recv_count << endl;
+    // cout << " send event: " << event_send_count << endl;
+    boost::this_thread::sleep(boost::posix_time::microseconds(100 * 1000));
   }
 }
 
-void receiveCanRun(int argc, char** argv)
+void receiveCanRun(int argc, char **argv)
 {
   CanReceiver receiver;
   while (true)
@@ -1089,12 +1107,12 @@ void receiveCanRun(int argc, char** argv)
   }
 }
 
-void receiveUDPRun(int argc, char** argv)
+void receiveUDPRun(int argc, char **argv)
 {
   while (true)
   {
     UdpServer udp_obu_server(UDP_ADV_SRV_ADRR, UDP_ADV_SRV_PORT);
-    //UdpServer UDP_OBU_server("192.168.43.204", UDP_ADV_SRV_PORT);
+    // UdpServer UDP_OBU_server("192.168.43.204", UDP_ADV_SRV_PORT);
     int result = udp_obu_server.recv(g_taffic_light_buffer, sizeof(g_taffic_light_buffer));
     g_current_spat = "";
     if (result != -1)
@@ -1112,12 +1130,12 @@ void receiveUDPRun(int argc, char** argv)
   }
 }
 
-void receiveUDPRun2(int argc, char** argv)
+void receiveUDPRun2(int argc, char **argv)
 {
   while (true)
   {
     UdpServer udp_obu_server(UDP_ADV_SRV_ADRR, 8767);
-    //UdpServer UDP_OBU_server("192.168.43.204", UDP_ADV_SRV_PORT);
+    // UdpServer UDP_OBU_server("192.168.43.204", UDP_ADV_SRV_PORT);
     int result = udp_obu_server.recv(g_other_car_msg_buffer, sizeof(g_other_car_msg_buffer));
     g_current_spat = "";
     if (result != -1)
@@ -1135,7 +1153,7 @@ void receiveUDPRun2(int argc, char** argv)
   }
 }
 
-void sendROSRun(int argc, char** argv)
+void sendROSRun(int argc, char **argv)
 {
   while (ros::ok())
   {
@@ -1158,49 +1176,53 @@ void sendROSRun(int argc, char** argv)
         spat.index = j1.at("Index");
         spat.intersection_id = j1.at("intersection_id");
         spat.road_id = j1.at("road_id");
-        //send traffic light
+        // send traffic light
         RosModuleTraffic::publishTraffic(TOPIC_TRAFFIC, spat);
-      } 
-      catch(std::exception& e)
+      }
+      catch (std::exception &e)
       {
-        std::cout << "parsing fail 1: " << e.what() << " "<<std::endl;
+        std::cout << "parsing fail 1: " << e.what() << " " << std::endl;
       }
     }
     g_mutex_traffic_light.unlock();
-    while (!g_other_car_queue.empty()){
-        g_mutex_other_car.lock();
-        std::string other_car_msg = g_other_car_queue.front();
-        g_other_car_queue.pop();
-        msgs::Obu obu;
-        std::cout<<"OBU_Info: "<<json::parse(other_car_msg)<<std::endl;
-        try{
-            json j0 = json::parse(other_car_msg);
-            json j1 = j0.at("OBU_Info");
-            /*
-            obu.obu_id = j1.at("obu_id");
-            obu.timestamp = j1.at("timestamp");
-            obu.speed = j1.at("speed");
-            obu.heading = j1.at("heading");
-            obu.lat = j1.at("Latitude");
-            obu.lon = j1.at("longitude");
-            obu.brake = j1.at("brake");
-            obu.streering = j1.at("steering");
-            RosModuleTraffic::publishOtherCar(obu);
-            */
-            Pose pose_fromOBU;
-            pose_fromOBU.x = (float)j1.at("currentPose_x");
-            pose_fromOBU.y = (float)j1.at("currentPose_y");
-            pose_fromOBU.z = (float)j1.at("currentPose_z");
-            RosModuleTraffic::publishCurrentPose(pose_fromOBU);
-            RosModuleTraffic::publishSpeedCmd((float)j1.at("speedInfo"));
-            std::cout<<"cout: "<<j1.at("currentPose_x")<<std::endl;
-            printf("json: %f\n", (float)j1.at("currentPose_x"));
-        }catch(std::exception& e){
-            std::cout << "parsing fail 2: " << e.what() << " "<<std::endl;
-        }
-        g_mutex_other_car.unlock();
+    while (!g_other_car_queue.empty())
+    {
+      g_mutex_other_car.lock();
+      std::string other_car_msg = g_other_car_queue.front();
+      g_other_car_queue.pop();
+      msgs::Obu obu;
+      std::cout << "OBU_Info: " << json::parse(other_car_msg) << std::endl;
+      try
+      {
+        json j0 = json::parse(other_car_msg);
+        json j1 = j0.at("OBU_Info");
+        /*
+        obu.obu_id = j1.at("obu_id");
+        obu.timestamp = j1.at("timestamp");
+        obu.speed = j1.at("speed");
+        obu.heading = j1.at("heading");
+        obu.lat = j1.at("Latitude");
+        obu.lon = j1.at("longitude");
+        obu.brake = j1.at("brake");
+        obu.streering = j1.at("steering");
+        RosModuleTraffic::publishOtherCar(obu);
+        */
+        Pose pose_fromOBU;
+        pose_fromOBU.x = (float)j1.at("currentPose_x");
+        pose_fromOBU.y = (float)j1.at("currentPose_y");
+        pose_fromOBU.z = (float)j1.at("currentPose_z");
+        RosModuleTraffic::publishCurrentPose(pose_fromOBU);
+        RosModuleTraffic::publishSpeedCmd((float)j1.at("speedInfo"));
+        std::cout << "cout: " << j1.at("currentPose_x") << std::endl;
+        printf("json: %f\n", (float)j1.at("currentPose_x"));
+      }
+      catch (std::exception &e)
+      {
+        std::cout << "parsing fail 2: " << e.what() << " " << std::endl;
+      }
+      g_mutex_other_car.unlock();
     }
-    //send route info
+    // send route info
     RosModuleTraffic::publishRoute(TOPIC_ROUTE, g_route_info);
 
     boost::this_thread::sleep(boost::posix_time::microseconds(500000));
@@ -1208,17 +1230,16 @@ void sendROSRun(int argc, char** argv)
   }
 }
 
-void receiveRosRun(int argc, char** argv)
+void receiveRosRun(int argc, char **argv)
 {
   bool is_big_bus = checkCommand(argc, argv, "-big");
   bool is_new_map = checkCommand(argc, argv, "-newMap");
 
   RosModuleTraffic::RegisterCallBack(callback_detObj, callback_gps, callback_veh, callback_gnss2local, callback_fps,
-                                     callbackBusStopInfo, callbackMileage, callbackNextStop, callbackRound, callbackIMU, 
-                                     callbackSysReady, callbackBI,callbackSersorStatus,callbackTracking,callbackFailSafe,               
-                                     callback_flag_info04, callback_flag_info02, callback_currentPose, callback_speedCmd, lidarlla_heading_Callback, 
+                                     callbackBusStopInfo, callbackMileage, callbackNextStop, callbackRound, callbackIMU,
+                                     callbackSysReady, callbackBI, callbackSersorStatus, callbackTracking, callbackFailSafe,
+                                     callback_flag_info04, callback_flag_info02, callback_currentPose, callback_speedCmd, lidarlla_heading_Callback,
                                      is_new_map);
-
 
   while (ros::ok())
   {
@@ -1253,7 +1274,7 @@ void receiveRosRun(int argc, char** argv)
       g_vk_status_queue.push(temp_vk001);
       g_mutex_queue.unlock();
     }
-    
+
     /*
     std::string temp_vk004 = get_jsonmsg_to_vk_server("M8.2.VK004");
     g_mutex_queue.lock();
@@ -1266,10 +1287,9 @@ void receiveRosRun(int argc, char** argv)
     g_vk_queue.push(temp_vk_006);
     g_mutex_queue.unlock();
 
-
     g_mutex_mqtt.lock();
     json gnssobj = genMqttGnssMsg();
-    json bsmobj  = genMqttBmsMsg();
+    json bsmobj = genMqttBmsMsg();
     json ecu_acc_obj = genMqttECUMsg(ecu_type::accelerator);
     json ecu_brk_obj = genMqttECUMsg(ecu_type::brake_pos);
     json ecu_speed_obj = genMqttECUMsg(ecu_type::speed);
@@ -1284,7 +1304,6 @@ void receiveRosRun(int argc, char** argv)
     json ecu_emergency_stop_obj = genMqttECUMsg(ecu_type::emergency_stop);
     json imu_obj = genMqttIMUMsg();
     json detect_obj = getMqttDOMsg();
-
 
     g_mqtt_gnss_queue.push(gnssobj);
     g_mqtt_bsm_queue.push(bsmobj);
@@ -1307,7 +1326,6 @@ void receiveRosRun(int argc, char** argv)
 
     g_mutex_mqtt.unlock();
 
-
     g_mutex_ros.unlock();
 
     boost::this_thread::sleep(boost::posix_time::microseconds(ROS_UPDATE_MICROSECONDS));
@@ -1315,7 +1333,7 @@ void receiveRosRun(int argc, char** argv)
   }
 }
 
-void getServerStatusRun(int argc, char** argv)
+void getServerStatusRun(int argc, char **argv)
 {
   try
   {
@@ -1330,7 +1348,7 @@ void getServerStatusRun(int argc, char** argv)
     j1["type"] = "M8.2.VK008";
     j1["deviceid"] = g_plate;
     std::string json_str = j1.dump();
-    const char* msg = json_str.c_str();
+    const char *msg = json_str.c_str();
     tcp_vk_client.sendRequest(msg, strlen(msg));
     tcp_vk_client.recvResponse(buffer_f, buff_size);
     std::string response(buffer_f);
@@ -1342,7 +1360,7 @@ void getServerStatusRun(int argc, char** argv)
     // connect to server success.
     RosModuleTraffic::publishServerStatus(TOPIC_SERCER_STATUS, true);
   }
-  catch (std::exception& e)
+  catch (std::exception &e)
   {
     std::cout << "getServerStatus message: " << e.what() << std::endl;
     // connect to server fail.
@@ -1388,7 +1406,7 @@ bool checkStopID(unsigned short in_stop_id, unsigned short out_stop_id)
 */
 
 // response
-void VK102callback(const std::string& request)
+void VK102callback(const std::string &request)
 {
   using namespace std;
   json J1;
@@ -1406,7 +1424,7 @@ void VK102callback(const std::string& request)
   {
     J1 = json::parse(request);
   }
-  catch (std::exception& e)
+  catch (std::exception &e)
   {
     std::cout << "VK102callback message: " << e.what() << std::endl;
     // 400 bad request
@@ -1425,7 +1443,7 @@ void VK102callback(const std::string& request)
     in_round = J1.at("in_round").get<unsigned int>();
     out_round = J1.at("out_round").get<unsigned int>();
   }
-  catch (std::exception& e)
+  catch (std::exception &e)
   {
     std::cout << "VK102callback message: " << e.what() << std::endl;
     g_tcp_server.send_json(genErrorMsg(400, e.what()));
@@ -1441,12 +1459,12 @@ void VK102callback(const std::string& request)
     return;
   }
   */
-  //char msg[36];
-  //sprintf(msg, "%d#%d", in_stopid, out_stopid);
+  // char msg[36];
+  // sprintf(msg, "%d#%d", in_stopid, out_stopid);
   msgs::StopInfoArray reserve;
   msgs::StopInfo in_stop_info;
   msgs::StopInfo out_stop_info;
-  
+
   in_stop_info.round = in_round;
   in_stop_info.id = in_stopid;
   out_stop_info.round = out_round;
@@ -1454,48 +1472,49 @@ void VK102callback(const std::string& request)
 
   reserve.stops.push_back(in_stop_info);
   reserve.stops.push_back(out_stop_info);
-  
+
   RosModuleTraffic::publishReserve(TOPIC_RESERVE, reserve);
   // 300 millis seconds
-  //boost::this_thread::sleep(boost::posix_time::microseconds(REVERSE_SLEEP_TIME_MICROSECONDS));
-  //std::cout << "wake up, VK102Response: " << VK102Response << std::endl;
+  // boost::this_thread::sleep(boost::posix_time::microseconds(REVERSE_SLEEP_TIME_MICROSECONDS));
+  // std::cout << "wake up, VK102Response: " << VK102Response << std::endl;
 
-  /* check response from /BusStop/Info */ 
+  /* check response from /BusStop/Info */
   unsigned short retry_count = 0;
-  while ( g_vk102_response.empty() && (retry_count < RESERVE_WAITING_TIMEOUT / REVERSE_SLEEP_TIME_MICROSECONDS ) )
+  while (g_vk102_response.empty() && (retry_count < RESERVE_WAITING_TIMEOUT / REVERSE_SLEEP_TIME_MICROSECONDS))
   {
-    retry_count ++;
+    retry_count++;
     boost::this_thread::sleep(boost::posix_time::microseconds(REVERSE_SLEEP_TIME_MICROSECONDS));
   }
-  
+
   /* response to server */
   if (g_vk102_response.empty())
   {
     g_tcp_server.send_json(genErrorMsg(201, "No data from /BusStop/Info."));
-  }else {
+  }
+  else
+  {
     g_tcp_server.send_json(g_vk102_response);
   }
 }
-
 
 // response
 void VK103callback(json reqJson)
 {
   using namespace std;
-  
+
   vector<unsigned int> stopids;
-  
+
   // clear response
   g_vk102_response = "";
- 
+
   cout << "VK103callback reqJson: " << reqJson.dump() << endl;
 
   // get data
   try
   {
-    stopids = reqJson.at("stopid").get< vector<unsigned int> >();
+    stopids = reqJson.at("stopid").get<vector<unsigned int>>();
   }
-  catch (exception& e)
+  catch (exception &e)
   {
     cout << "VK103callback message: " << e.what() << endl;
     g_tcp_server.send_json(genErrorMsg(400, e.what()));
@@ -1503,91 +1522,94 @@ void VK103callback(json reqJson)
   }
 
   msgs::StopInfoArray reserve;
-  for (size_t i = 0 ; i < stopids.size(); i++)
+  for (size_t i = 0; i < stopids.size(); i++)
   {
     msgs::StopInfo stop;
     stop.round = 1;
     stop.id = stopids[i];
     reserve.stops.push_back(stop);
   }
-  cout << "VK103callback msgs for ros: " <<  endl;
+  cout << "VK103callback msgs for ros: " << endl;
 
   RosModuleTraffic::publishReserve(TOPIC_RESERVE, reserve);
   // 300 millis seconds
-  //boost::this_thread::sleep(boost::posix_time::microseconds(REVERSE_SLEEP_TIME_MICROSECONDS));
-  //std::cout << "wake up, VK102Response: " << VK102Response << std::endl;
+  // boost::this_thread::sleep(boost::posix_time::microseconds(REVERSE_SLEEP_TIME_MICROSECONDS));
+  // std::cout << "wake up, VK102Response: " << VK102Response << std::endl;
 
-  /* check response from /BusStop/Info */ 
+  /* check response from /BusStop/Info */
   unsigned short retryCount = 0;
-  while ( g_vk102_response.empty() && (retryCount < RESERVE_WAITING_TIMEOUT / REVERSE_SLEEP_TIME_MICROSECONDS ) )
+  while (g_vk102_response.empty() && (retryCount < RESERVE_WAITING_TIMEOUT / REVERSE_SLEEP_TIME_MICROSECONDS))
   {
-    retryCount ++;
+    retryCount++;
     std::cout << "retry: " << retryCount << std::endl;
     boost::this_thread::sleep(boost::posix_time::microseconds(REVERSE_SLEEP_TIME_MICROSECONDS));
   }
-  
+
   /* response to server */
   if (g_vk102_response.empty())
   {
     g_tcp_server.send_json(genErrorMsg(201, "No data from /BusStop/Info."));
-  }else {
+  }
+  else
+  {
     g_tcp_server.send_json(g_vk102_response);
   }
 }
 
 void VK104callback(json reqJson)
 {
-   using namespace std;
-   
-   cout << "VK104callback reqJson: " << reqJson.dump() << endl;
-  
-   string route_path;
-   vector<unsigned int> stopids;
-   
+  using namespace std;
 
-   // get data
-   try
-   {
-     g_route_id = reqJson.at("routeid").get<int>();
-     route_path = reqJson.at("routepath").get<string>(); 
-     stopids = reqJson.at("stopid").get< vector<unsigned int> >();
-   }
-   catch (exception& e)
-   {
-     cout << "VK104callback message: " << e.what() << endl;
-     g_tcp_server.send_json(genResMsg(0));
-     return;
-   }
- 
-   g_route_info.routeid = g_route_id;
-   g_route_info.route_path = route_path;
-   g_route_info.stops.clear();
-   for (size_t i = 0 ; i < stopids.size(); i++)
-   {
-     msgs::StopInfo stop;
-     stop.round = 1;
-     stop.id = stopids[i];
-     g_route_info.stops.push_back(stop);
-   }
+  cout << "VK104callback reqJson: " << reqJson.dump() << endl;
 
-    /* check response from /BusStop/Info */ 
-   unsigned short retry_count = 0;
-   while ( g_vk102_response.empty() && (retry_count < RESERVE_WAITING_TIMEOUT / REVERSE_SLEEP_TIME_MICROSECONDS ) )
-   {
-     retry_count ++;
-     boost::this_thread::sleep(boost::posix_time::microseconds(REVERSE_SLEEP_TIME_MICROSECONDS));
-   }
-  
-   /* response to server */
-   if (g_vk102_response.empty())
-   {
-     g_tcp_server.send_json(genResMsg(0));
-   }else {
-     g_tcp_server.send_json(genResMsg(1));
-   }
+  string route_path;
+  vector<unsigned int> stopids;
+
+  // get data
+  try
+  {
+    g_route_id = reqJson.at("routeid").get<int>();
+    route_path = reqJson.at("routepath").get<string>();
+    stopids = reqJson.at("stopid").get<vector<unsigned int>>();
+  }
+  catch (exception &e)
+  {
+    cout << "VK104callback message: " << e.what() << endl;
+    g_tcp_server.send_json(genResMsg(0));
+    return;
+  }
+
+  g_route_info.routeid = g_route_id;
+  g_route_info.route_path = route_path;
+  g_route_info.stops.clear();
+  for (size_t i = 0; i < stopids.size(); i++)
+  {
+    msgs::StopInfo stop;
+    stop.round = 1;
+    stop.id = stopids[i];
+    g_route_info.stops.push_back(stop);
+  }
+
+  /* check response from /BusStop/Info */
+  unsigned short retry_count = 0;
+  while (g_vk102_response.empty() && (retry_count < RESERVE_WAITING_TIMEOUT / REVERSE_SLEEP_TIME_MICROSECONDS))
+  {
+    retry_count++;
+    boost::this_thread::sleep(boost::posix_time::microseconds(REVERSE_SLEEP_TIME_MICROSECONDS));
+  }
+
+  /* response to server */
+  if (g_vk102_response.empty())
+  {
+    g_tcp_server.send_json(genResMsg(0));
+  }
+  else
+  {
+    g_tcp_server.send_json(genResMsg(1));
+  }
 }
 
-//route api
+// route api
 void route(const std::string &request)
 {
   using namespace std;
@@ -1599,7 +1621,7 @@ void route(const std::string &request)
   {
     requestJson = json::parse(request);
   }
-  catch (exception& e)
+  catch (exception &e)
   {
     cout << "tcp server callback message: " << e.what() << endl;
     // 400 bad request
@@ -1612,7 +1634,7 @@ void route(const std::string &request)
   {
     type = requestJson.at("type").get<string>();
   }
-  catch (std::exception& e)
+  catch (std::exception &e)
   {
     std::cout << "tcp server callback message: " << e.what() << std::endl;
     g_tcp_server.send_json(genErrorMsg(400, e.what()));
@@ -1622,26 +1644,27 @@ void route(const std::string &request)
   if ("M8.2.VK102" == type)
   {
     VK102callback(request);
-  } else if ("M8.2.VK103" == type)
+  }
+  else if ("M8.2.VK103" == type)
   {
     VK103callback(requestJson);
-  } else if ("M8.2.VK104" == type)
+  }
+  else if ("M8.2.VK104" == type)
   {
     VK104callback(requestJson);
   }
 }
 
-
 // start TCP server to receive VK102 reserve bus from backend.
-void tcpServerRun(int argc, char** argv)
+void tcpServerRun(int argc, char **argv)
 {
   // set ip and port
   g_tcp_server.initial(TCP_ADV_SRV_ADRR, TCP_ADV_SRV_PORT);
-  //server.initial("192.168.43.204",8765);
-  // server.initial("192.168.2.110",8765);
-  // listening connection request
+  // server.initial("192.168.43.204",8765);
+  //  server.initial("192.168.2.110",8765);
+  //  listening connection request
   int result = g_tcp_server.start_listening();
-  
+
   if (result >= 0)
   {
     // accept and read request and handle request in VK102callback.
@@ -1649,7 +1672,7 @@ void tcpServerRun(int argc, char** argv)
     {
       g_tcp_server.wait_and_accept(route);
     }
-    catch (std::exception& e)
+    catch (std::exception &e)
     {
       g_tcp_server.send_json(genErrorMsg(408, "You should send request in 10 seconds after you connected to ADV."));
     }
@@ -1658,13 +1681,16 @@ void tcpServerRun(int argc, char** argv)
 
 double get_GNSS_heading_360(double heading)
 {
-    double result = -1;
-    if(heading < 0){
-        result = heading + 360;
-    }else {
-        result = heading; 
-    }
-    return result;
+  double result = -1;
+  if (heading < 0)
+  {
+    result = heading + 360;
+  }
+  else
+  {
+    result = heading;
+  }
+  return result;
 }
 /*
 json genMqttGnssMsg()
@@ -1685,16 +1711,17 @@ json genMqttGnssMsg()
   return gnss;
 }
 */
-json genMqttGnssMsg() {
+json genMqttGnssMsg()
+{
   using namespace std::chrono;
   json gnss;
   uint64_t timestamp_ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-  //uint64_t source_ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
+  // uint64_t source_ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
   double lat = g_current_gnss_pose.x;
   double lon = g_current_gnss_pose.y;
   double alt = g_current_gnss_pose.z;
   gnss["coord"] = {lat, lon, alt};
-  //gnss["speed"] = -1; remove speed
+  // gnss["speed"] = -1; remove speed
   gnss["heading"] = lidarlla_heading;
   gnss["timestamp"] = timestamp_ms;
   gnss["source_time"] = timestamp_ms;
@@ -1708,8 +1735,8 @@ json genMqttBmsMsg()
   bsm["uid"] = g_plate;
   bsm["current"] = g_battery.gross_current;
   bsm["voltage"] = g_battery.gross_voltage;
-  bsm["capacity"] =g_vs.battery;
-  bsm["design_capacity"] = 300 ;
+  bsm["capacity"] = g_vs.battery;
+  bsm["design_capacity"] = 300;
   bsm["timestamp"] = timestamp_ms;
   bsm["source_time"] = timestamp_ms;
   return bsm;
@@ -1722,46 +1749,46 @@ json genMqttECUMsg(ecu_type type)
   uint64_t timestamp_ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
   json ecu;
 
-  switch(type){
-    case ecu_type::accelerator:
-      ecu["accelerator_pos"] = g_vs.accelerator;
-      break;
-    case ecu_type::brake_pos:
-      ecu["brake_pos"] = g_vs.brake_pos;
-      break;
-    case ecu_type::steering_wheel_angle:
-      ecu["steering_wheel_angle"] = g_vs.steering_wheel;
-      break;
-    case ecu_type::speed:
-      ecu["speed"] = g_vs.speed;
-      break;
-    case ecu_type::rpm:
-      ecu["rpm"] = g_vs.rotating_speed;
-      break;
-    case ecu_type::gear_state:
-      ecu["gear_state"] = "1";
-      break;
-    case ecu_type::dtc:
-      ecu["dtc"] = "test";
-      break;
-    case ecu_type::engine_load:
-      ecu["engine_load"] = -1.0;
-      ecu["vin"] = "";
-      break;
-    case ecu_type::mileage:
-      ecu["total_mileage"] = g_delta_mileage;
-      break;
-    case ecu_type::operation_speed:
-      ecu["operation_speed"] = -1.0;
-      ecu["maximum_speed"] = 110;
-      break;
-    case ecu_type::driving_mode:
-      ecu["driving_mode"] = 1;
-      break;
-    case ecu_type::emergency_stop:
-      ecu["emergency_stop"] = g_vs.estop;
-      break;
-
+  switch (type)
+  {
+  case ecu_type::accelerator:
+    ecu["accelerator_pos"] = g_vs.accelerator;
+    break;
+  case ecu_type::brake_pos:
+    ecu["brake_pos"] = g_vs.brake_pos;
+    break;
+  case ecu_type::steering_wheel_angle:
+    ecu["steering_wheel_angle"] = g_vs.steering_wheel;
+    break;
+  case ecu_type::speed:
+    ecu["speed"] = g_vs.speed;
+    break;
+  case ecu_type::rpm:
+    ecu["rpm"] = g_vs.rotating_speed;
+    break;
+  case ecu_type::gear_state:
+    ecu["gear_state"] = "1";
+    break;
+  case ecu_type::dtc:
+    ecu["dtc"] = "test";
+    break;
+  case ecu_type::engine_load:
+    ecu["engine_load"] = -1.0;
+    ecu["vin"] = "";
+    break;
+  case ecu_type::mileage:
+    ecu["total_mileage"] = g_delta_mileage;
+    break;
+  case ecu_type::operation_speed:
+    ecu["operation_speed"] = -1.0;
+    ecu["maximum_speed"] = 110;
+    break;
+  case ecu_type::driving_mode:
+    ecu["driving_mode"] = 1;
+    break;
+  case ecu_type::emergency_stop:
+    ecu["emergency_stop"] = g_vs.estop;
+    break;
   }
   ecu["timestamp"] = timestamp_ms;
   ecu["source_time"] = timestamp_ms;
@@ -1774,91 +1801,93 @@ json genMqttIMUMsg()
   uint64_t timestamp_ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
   json jimu;
   jimu["uid"] = g_plate;
-  //jimu["gyro_x"] = imu.Gyrox;
-  //jimu["gyro_y"] = imu.Gyroy;
-  //jimu["gyro_z"] = imu.Gyroz;
+  // jimu["gyro_x"] = imu.Gyrox;
+  // jimu["gyro_y"] = imu.Gyroy;
+  // jimu["gyro_z"] = imu.Gyroz;
   jimu["gyro"] = {g_imu.Gyrox, g_imu.Gyroy, g_imu.Gyroz};
   jimu["roll_rate"] = g_current_gnss_pose.roll;
   jimu["pitch_rate"] = g_current_gnss_pose.pitch;
   jimu["yaw_rate"] = g_current_gnss_pose.yaw;
-  //jimu["acc_x"] = imu.Gx;
-  //jimu["acc_y"] = imu.Gy;
-  //jimu["acc_z"] = imu.Gz;
-  //jimu["acc"] = {imu.Gx, imu.Gy, imu.Gz};
-  //jimu["d2xdt"] = -1.0;
-  //jimu["d2ydt"] = -1.0;
-  //jimu["d2zdt"] = -1.0;
+  // jimu["acc_x"] = imu.Gx;
+  // jimu["acc_y"] = imu.Gy;
+  // jimu["acc_z"] = imu.Gz;
+  // jimu["acc"] = {imu.Gx, imu.Gy, imu.Gz};
+  // jimu["d2xdt"] = -1.0;
+  // jimu["d2ydt"] = -1.0;
+  // jimu["d2zdt"] = -1.0;
   jimu["timestamp"] = timestamp_ms;
   jimu["source_time"] = timestamp_ms;
   return jimu;
 }
 
-json getMqttDOMsg(){
-    using namespace std::chrono;
-    uint64_t timestamp_ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-    json detect;
-    json detect_obj;
-    json obj_array;
-    for (size_t i = 0; i < g_tracking_obj_array.objects.size(); i++)
-    {
-         json obj;
-         obj["classification"] = g_tracking_obj_array.objects[i].classId;
-         obj["tid"] = g_tracking_obj_array.objects[i].track.id;
-         obj["do_coordinate"] = {    
-            g_tracking_obj_array.objects[i].center_point_gps.x,
-            g_tracking_obj_array.objects[i].center_point_gps.y, 
-            g_tracking_obj_array.objects[i].center_point_gps.z 
-         };
-         obj["do_heading"] = {
-            g_tracking_obj_array.objects[i].heading_enu.x,
-            g_tracking_obj_array.objects[i].heading_enu.y,
-            g_tracking_obj_array.objects[i].heading_enu.z,
-            g_tracking_obj_array.objects[i].heading_enu.w,
-         };
-         obj["do_dimension"] = {
-             g_tracking_obj_array.objects[i].dimension.length,
-             g_tracking_obj_array.objects[i].dimension.width,
-             g_tracking_obj_array.objects[i].dimension.height,
-         };
-         obj_array.push_back(obj);
-    }
-    if (obj_array.empty()){
-        detect_obj["obj"] = json::array();
-    }else{
-        detect_obj["obj"] = obj_array;
-    }
-    detect_obj["timestamp"] = timestamp_ms;
-    detect_obj["source_time"] = timestamp_ms;
-    return detect_obj;
-
+json getMqttDOMsg()
+{
+  using namespace std::chrono;
+  uint64_t timestamp_ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+  json detect;
+  json detect_obj;
+  json obj_array;
+  for (size_t i = 0; i < g_tracking_obj_array.objects.size(); i++)
+  {
+    json obj;
+    obj["classification"] = g_tracking_obj_array.objects[i].classId;
+    obj["tid"] = g_tracking_obj_array.objects[i].track.id;
+    obj["do_coordinate"] = {
+        g_tracking_obj_array.objects[i].center_point_gps.x,
+        g_tracking_obj_array.objects[i].center_point_gps.y,
+        g_tracking_obj_array.objects[i].center_point_gps.z};
+    obj["do_heading"] = {
+        g_tracking_obj_array.objects[i].heading_enu.x,
+        g_tracking_obj_array.objects[i].heading_enu.y,
+        g_tracking_obj_array.objects[i].heading_enu.z,
+        g_tracking_obj_array.objects[i].heading_enu.w,
+    };
+    obj["do_dimension"] = {
+        g_tracking_obj_array.objects[i].dimension.length,
+        g_tracking_obj_array.objects[i].dimension.width,
+        g_tracking_obj_array.objects[i].dimension.height,
+    };
+    obj_array.push_back(obj);
+  }
+  if (obj_array.empty())
+  {
+    detect_obj["obj"] = json::array();
+  }
+  else
+  {
+    detect_obj["obj"] = obj_array;
+  }
+  detect_obj["timestamp"] = timestamp_ms;
+  detect_obj["source_time"] = timestamp_ms;
+  return detect_obj;
 }
 
-static void on_mqtt_connect(struct mosquitto* client, void* obj, int rc)
+static void on_mqtt_connect(struct mosquitto *client, void *obj, int rc)
 {
   std::string result;
   std::string topic = "vehicle/report/" + g_vid;
   switch (rc)
   {
-    case 0:
-      result = ": success";
-      g_is_mqtt_connected = true;
-      break;
-    case 1:
-      result = ": connection refused (unacceptable protocol version)";
-      break;
-    case 2:
-      result = ": connection refused (identifier rejected)";
-      break;
-    case 3:
-      result = ": connection refused (broker unavailable)";
-      break;
-    default:
-      result = ": unknown error";
+  case 0:
+    result = ": success";
+    g_is_mqtt_connected = true;
+    break;
+  case 1:
+    result = ": connection refused (unacceptable protocol version)";
+    break;
+  case 2:
+    result = ": connection refused (identifier rejected)";
+    break;
+  case 3:
+    result = ": connection refused (broker unavailable)";
+    break;
+  default:
+    result = ": unknown error";
   }
   std::cout << "on_Connect result= " << rc << result << std::endl;
 }
 
-void mqttPubRun(int argc, char** argv)
+void mqttPubRun(int argc, char **argv)
 {
   g_mqtt_client.setOnConneclCallback(on_mqtt_connect);
   g_mqtt_client.vid = g_vid;
@@ -1867,13 +1896,13 @@ void mqttPubRun(int argc, char** argv)
 
 /*========================= thread runnables end =========================*/
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
   using namespace std;
   RosModuleTraffic::Initial(argc, argv);
   g_plate = RosModuleTraffic::getPlate();
   g_vid = RosModuleTraffic::getVid();
-  //RosModuleTraffic::advertisePublisher();
+  // RosModuleTraffic::advertisePublisher();
   /*Start thread to receive data from can bus.*/
   if (!checkCommand(argc, argv, "-no_can"))
   {

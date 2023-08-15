@@ -6,7 +6,7 @@
 #include "std_msgs/msg/string.hpp"
 #include "std_msgs/msg/bool.hpp"
 #include "std_msgs/msg/int32.hpp"
-#include "std_msgs/msg/Float64.h"
+#include "std_msgs/msg/float64.h"
 #include "msgs/msg/detected_object_array.hpp"
 #include "msgs/msg/lid_lla.hpp"
 #include "msgs/msg/veh_info.hpp"
@@ -24,13 +24,14 @@
 #include "tf2/utils.h"
 #include <chrono>
 #include <thread>
+#include <memory>
 
 static rclcpp::Publisher<msgs::msg::Obu>::SharedPtr othercar_pub;
 static rclcpp::Publisher<msgs::msg::Spat>::SharedPtr traffic_pub;
 static rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr backend_pub;
 static rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr occ_pub;
-static rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::currentPose_vToV_pub;
-static rclcpp::Publisher<std_msgs::msg::Float64>::speedCmd_vToV_pub;
+static rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr currentPose_vToV_pub;
+static rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr speedCmd_vToV_pub;
 
 struct Pose
 {
@@ -92,9 +93,9 @@ public:
                                void (*cb3)(const msgs::msg::VehInfo::SharedPtr),
                                void (*cb4)(const geometry_msgs::msg::PoseStamped::SharedPtr),
                                void (*cb5)(const std_msgs::msg::String::SharedPtr),
-                               void (*cb6)(const msgs::msg::Flag_Info::SharedPtr),
+                               void (*cb6)(const msgs::msg::FlagInfo::SharedPtr),
                                void (*cb7)(const std_msgs::msg::String::SharedPtr),
-                               void (*cb8)(const msgs::msg::Flag_Info::SharedPtr),
+                               void (*cb8)(const msgs::msg::FlagInfo::SharedPtr),
                                void (*cb9)(const std_msgs::msg::Int32::SharedPtr),
                                void (*cb10)(const sensor_msgs::msg::Imu::SharedPtr),
                                void (*cb11)(const std_msgs::msg::Bool::SharedPtr),
@@ -102,8 +103,8 @@ public:
                                void (*cb13)(const std_msgs::msg::String::SharedPtr),
                                void (*cb14)(const msgs::msg::DetectedObjectArray::SharedPtr),
                                void (*cb15)(const std_msgs::msg::String::SharedPtr),
-                               void (*cb16)(const msgs::msg::Flag_Info::SharedPtr),
-                               void (*cb17)(const msgs::msg::Flag_Info::SharedPtr),
+                               void (*cb16)(const msgs::msg::FlagInfo::SharedPtr),
+                               void (*cb17)(const msgs::msg::FlagInfo::SharedPtr),
                                void (*cb18)(const geometry_msgs::msg::PoseStamped::SharedPtr),
                                void (*cb19)(const std_msgs::msg::Float64::SharedPtr),
                                void (*cb20)(const std_msgs::msg::Float64::SharedPtr),
@@ -253,13 +254,13 @@ public:
     msg.pose.position.x = aPose.x;
     msg.pose.position.y = aPose.y;
     msg.pose.position.z = aPose.z;
-    currentPose_vToV_pub.publish(msg);
+    currentPose_vToV_pub->publish(msg);
   }
   static void publishSpeedCmd(double speedKPH)
   {
     std_msgs::msg::Float64 msg;
     msg.data = speedKPH;
-    speedCmd_vToV_pub.publish(msg);
+    speedCmd_vToV_pub->publish(msg);
   }
 };
 
